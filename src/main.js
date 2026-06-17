@@ -1,0 +1,618 @@
+import './styles/main.css';
+import { ThemeManager } from './utils/theme-manager.js';
+
+// Import modular Web Components
+import './components/GlassCard/GlassCard.js';
+import './components/Layout/Sidebar.js';
+import './components/Layout/Navbar.js';
+import './components/GlassButton/GlassButton.js';
+import './components/CodeViewer/CodeViewer.js';
+
+// 1. Inyección de dependencias automáticas
+function injectDependencies() {
+  if (typeof document === 'undefined') return;
+
+  if (!document.querySelector('link[href*="bootstrap.min.css"]')) {
+    const bsCSS = document.createElement('link');
+    bsCSS.rel = 'stylesheet';
+    bsCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css';
+    document.head.appendChild(bsCSS);
+  }
+
+  if (!document.querySelector('link[href*="bootstrap-icons.css"]')) {
+    const iconCSS = document.createElement('link');
+    iconCSS.rel = 'stylesheet';
+    iconCSS.href = 'https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css';
+    document.head.appendChild(iconCSS);
+  }
+
+  if (!window.hljs && !document.querySelector('script[src*="highlight.min.js"]')) {
+    const hljsCSS = document.createElement('link');
+    hljsCSS.rel = 'stylesheet';
+    hljsCSS.href = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css';
+    document.head.appendChild(hljsCSS);
+
+    const hljsScript = document.createElement('script');
+    hljsScript.src = 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js';
+    hljsScript.onload = () => {
+      document.querySelectorAll('pre code').forEach((el) => {
+        window.hljs.highlightElement(el);
+      });
+    };
+    document.head.appendChild(hljsScript);
+  }
+}
+
+
+
+function initCustomSelects() {
+  if (typeof document === 'undefined') return;
+  
+  document.querySelectorAll('.form-select').forEach(select => {
+    // Avoid double initialization
+    if (select.parentNode && select.parentNode.classList.contains('custom-select-wrapper')) return;
+
+    select.style.display = 'none';
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'custom-select-wrapper position-relative';
+
+    const trigger = document.createElement('div');
+    trigger.className = 'form-select custom-select-trigger d-flex justify-content-between align-items-center';
+    trigger.style.cursor = 'pointer';
+
+    const triggerText = document.createElement('span');
+    const selectedOption = select.options[select.selectedIndex];
+    triggerText.textContent = selectedOption ? selectedOption.textContent : '';
+    trigger.appendChild(triggerText);
+
+    const arrow = document.createElement('i');
+    arrow.className = 'bi bi-chevron-down ms-2 text-white';
+    arrow.style.transition = 'transform 0.2s ease';
+    trigger.appendChild(arrow);
+
+    wrapper.appendChild(trigger);
+
+    const dropdown = document.createElement('div');
+    dropdown.className = 'custom-select-dropdown glass-card position-absolute w-100 mt-1 d-none p-2';
+
+    Array.from(select.options).forEach((option, index) => {
+      const item = document.createElement('div');
+      item.className = 'custom-select-option px-3 py-2 rounded-2 mb-1';
+      if (index === select.options.length - 1) {
+        item.className = 'custom-select-option px-3 py-2 rounded-2';
+      }
+      item.textContent = option.textContent;
+
+      if (index === select.selectedIndex) {
+        item.classList.add('active');
+      }
+
+      item.addEventListener('click', (e) => {
+        e.stopPropagation();
+        select.selectedIndex = index;
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+
+        triggerText.textContent = option.textContent;
+
+        dropdown.querySelectorAll('.custom-select-option').forEach((opt, idx) => {
+          if (idx === index) {
+            opt.classList.add('active');
+          } else {
+            opt.classList.remove('active');
+          }
+        });
+
+        dropdown.classList.add('d-none');
+        arrow.style.transform = 'rotate(0deg)';
+      });
+
+      dropdown.appendChild(item);
+    });
+
+    wrapper.appendChild(dropdown);
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpen = !dropdown.classList.contains('d-none');
+      document.querySelectorAll('.custom-select-dropdown').forEach(d => d.classList.add('d-none'));
+      document.querySelectorAll('.custom-select-trigger i').forEach(a => a.style.transform = 'rotate(0deg)');
+
+      if (!isOpen) {
+        dropdown.classList.remove('d-none');
+        arrow.style.transform = 'rotate(180deg)';
+      }
+    });
+
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+  });
+
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.custom-select-dropdown').forEach(d => d.classList.add('d-none'));
+    document.querySelectorAll('.custom-select-trigger i').forEach(a => a.style.transform = 'rotate(0deg)');
+  });
+}
+
+function openZoomModal(element) {
+  if (typeof document === 'undefined') return;
+  if (document.getElementById('zoom-modal')) return;
+
+  const modal = document.createElement('div');
+  modal.id = 'zoom-modal';
+  modal.className = 'zoom-modal';
+  
+  const contentWrapper = document.createElement('div');
+  contentWrapper.className = 'zoom-modal-content';
+  contentWrapper.style.cursor = 'grab';
+
+  let clone = element.cloneNode(true);
+  // Conservamos el ID si es un SVG para que los estilos scoped internos de Mermaid sigan funcionando
+  if (clone.id && clone.tagName.toLowerCase() !== 'svg') {
+    clone.removeAttribute('id');
+  }
+  
+  // Preservar estilos de Mermaid envolviendo en el contenedor original
+  const mermaidParent = element.closest('pre.mermaid');
+  if (mermaidParent) {
+    const mermaidWrap = document.createElement('div');
+    mermaidWrap.className = mermaidParent.className;
+    mermaidWrap.style.cssText = mermaidParent.style.cssText;
+    mermaidWrap.style.width = '100%';
+    mermaidWrap.style.height = '100%';
+    mermaidWrap.style.display = 'flex';
+    mermaidWrap.style.justifyContent = 'center';
+    mermaidWrap.style.alignItems = 'center';
+    
+    const svgEl = clone.tagName.toLowerCase() === 'svg' ? clone : clone.querySelector('svg');
+    if (svgEl) {
+      svgEl.removeAttribute('width');
+      svgEl.removeAttribute('height');
+      svgEl.style.width = '100%';
+      svgEl.style.height = 'auto';
+      svgEl.style.maxWidth = '90vw';
+      svgEl.style.maxHeight = '80vh';
+    }
+    
+    mermaidWrap.appendChild(clone);
+    clone = mermaidWrap;
+  } else if (clone.tagName.toLowerCase() === 'svg') {
+    clone.removeAttribute('width');
+    clone.removeAttribute('height');
+    clone.style.width = '100%';
+    clone.style.height = 'auto';
+    clone.style.maxWidth = '90vw';
+    clone.style.maxHeight = '80vh';
+  }
+
+  contentWrapper.appendChild(clone);
+  modal.appendChild(contentWrapper);
+
+  const closeBtn = document.createElement('button');
+  closeBtn.className = 'zoom-modal-close';
+  closeBtn.innerHTML = '<i class="bi bi-x-lg"></i>';
+  modal.appendChild(closeBtn);
+
+  const caption = document.createElement('div');
+  caption.className = 'zoom-modal-caption';
+  caption.textContent = 'Scroll para zoom · Arrastrar para mover · Clic fuera para cerrar';
+  modal.appendChild(caption);
+
+  document.body.appendChild(modal);
+
+  // Estado del Zoom y Arrastre
+  let currentScale = 1.6;
+  let isDragging = false;
+  let startX = 0, startY = 0;
+  let translateX = 0, translateY = 0;
+
+  const updateTransform = () => {
+    contentWrapper.style.transform = `translate(${translateX}px, ${translateY}px) scale(${currentScale})`;
+  };
+
+  requestAnimationFrame(() => {
+    modal.classList.add('active');
+    contentWrapper.classList.add('active');
+    updateTransform();
+  });
+
+  // Zoom con la rueda del ratón (Wheel)
+  modal.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? -0.15 : 0.15;
+    currentScale = Math.min(Math.max(1, currentScale + delta), 6); // Rango 1x - 6x
+    
+    if (currentScale === 1) {
+      translateX = 0;
+      translateY = 0;
+      contentWrapper.style.cursor = 'zoom-out';
+    } else {
+      contentWrapper.style.cursor = 'grab';
+    }
+    
+    contentWrapper.style.transition = 'transform 0.15s ease-out';
+    updateTransform();
+  }, { passive: false });
+
+  // Arrastre con el ratón
+  contentWrapper.addEventListener('mousedown', (e) => {
+    if (currentScale <= 1) return;
+    e.preventDefault();
+    isDragging = true;
+    contentWrapper.style.transition = 'none'; // Sin retardo al arrastrar
+    startX = e.clientX - translateX;
+    startY = e.clientY - translateY;
+    contentWrapper.style.cursor = 'grabbing';
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isDragging) return;
+    translateX = e.clientX - startX;
+    translateY = e.clientY - startY;
+    updateTransform();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if (isDragging) {
+      isDragging = false;
+      contentWrapper.style.transition = 'transform 0.15s ease-out';
+      contentWrapper.style.cursor = 'grab';
+    }
+  });
+
+  // Cerrar modal al hacer clic fuera
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal || e.target.closest('.zoom-modal-close')) {
+      closeZoomModal(modal, contentWrapper);
+    }
+  });
+
+  const escHandler = (e) => {
+    if (e.key === 'Escape') {
+      closeZoomModal(modal, contentWrapper);
+      document.removeEventListener('keydown', escHandler);
+    }
+  };
+  document.addEventListener('keydown', escHandler);
+}
+
+function closeZoomModal(modal, contentWrapper) {
+  modal.classList.remove('active');
+  contentWrapper.classList.remove('active');
+  setTimeout(() => {
+    if (modal.parentNode) {
+      modal.parentNode.removeChild(modal);
+    }
+  }, 300);
+}
+
+// Registro
+export function initGlassKitUI() {
+  injectDependencies();
+  ThemeManager.init();
+  initCustomSelects();
+  
+
+
+  // Caching DOM elements para mejor rendimiento
+  const contentSections = document.querySelectorAll('.content-section, #theme-section');
+  const navLinks = document.querySelectorAll('.sidebar .nav-link');
+
+  // Helper to adjust navbar visibility based on page and responsive state
+  const adjustNavbarVisibility = (targetPageId) => {
+    const mainNavbar = document.getElementById('main-navbar');
+    if (!mainNavbar) return;
+    
+    if (!targetPageId) {
+      const activePage = document.querySelector('.page-view:not(.d-none)');
+      targetPageId = activePage ? activePage.id : '';
+    }
+    
+    if (targetPageId === 'page-login') {
+      if (window.innerWidth < 992) {
+        mainNavbar.classList.remove('d-none');
+      } else {
+        mainNavbar.classList.add('d-none');
+      }
+    } else {
+      mainNavbar.classList.remove('d-none');
+    }
+  };
+
+  // Helper para actualizar el título del navbar (solo en móviles)
+  const updateNavbarTitle = (titleText) => {
+    // Solo cambiar el título dinámicamente en responsive mode (móviles/tabletas)
+    if (window.innerWidth < 992) {
+      const navbar = document.getElementById('main-navbar') || document.querySelector('gk-navbar');
+      if (navbar) {
+        navbar.setAttribute('title', titleText);
+      }
+    }
+  };
+
+  // Inicializar título de navbar con la sección/página activa al cargar
+  const activeLink = document.querySelector('.sidebar .nav-link.active');
+  if (activeLink) {
+    const titleSpan = activeLink.querySelector('span');
+    if (titleSpan) {
+      updateNavbarTitle(titleSpan.textContent.trim());
+    }
+    
+    // Ocultar navbar superior si la página activa por defecto es el login (ajustado para móvil)
+    const targetPageId = activeLink.getAttribute('data-page');
+    adjustNavbarVisibility(targetPageId);
+  }
+
+  // Escuchar redimensionamiento para actualizar la visibilidad del navbar
+  window.addEventListener('resize', () => adjustNavbarVisibility());
+
+  // Inicialización de Mermaid base
+  const mermaidNodes = document.querySelectorAll('pre.mermaid');
+  const originalMermaidCodes = Array.from(mermaidNodes).map(node => node.textContent.trim());
+
+  const renderMermaid = async (primaryColor) => {
+      if (mermaidNodes.length === 0) return;
+      let mermaidObj = window.mermaid;
+      if (!mermaidObj) {
+          try {
+              const module = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
+              mermaidObj = module.default;
+              window.mermaid = mermaidObj;
+          } catch(e) {
+              console.error("Failed to import mermaid from CDN, falling back to bundled", e);
+              const { default: bundled } = await import('mermaid');
+              mermaidObj = bundled;
+          }
+      }
+      
+      mermaidObj.initialize({
+          startOnLoad: false,
+          theme: 'base',
+          themeVariables: {
+              primaryColor: primaryColor,
+              primaryTextColor: '#ffffff',
+              primaryBorderColor: primaryColor,
+              lineColor: '#ffffff',
+              secondaryColor: 'rgba(255, 255, 255, 0.1)',
+              tertiaryColor: 'rgba(255, 255, 255, 0.05)',
+              nodeBorder: primaryColor,
+              mainBkg: 'rgba(0, 0, 0, 0.2)',
+          }
+      });
+
+      for (let i = 0; i < mermaidNodes.length; i++) {
+          const node = mermaidNodes[i];
+          const id = `mermaid-svg-${i}-${Date.now()}`;
+          try {
+              const { svg } = await mermaidObj.render(id, originalMermaidCodes[i]);
+              node.innerHTML = svg;
+          } catch (e) {
+              console.error("Error rendering mermaid:", e);
+          }
+      }
+  };
+
+  // Escuchar cambios de tema
+  window.addEventListener('glasskit-theme-changed', (e) => {
+      const { primary } = e.detail;
+      renderMermaid(primary);
+  });
+
+  // Render inicial con el tema default o guardado
+  const initialPrimaryColor = getComputedStyle(document.documentElement).getPropertyValue('--bs-primary').trim() || '#0d6efd';
+  renderMermaid(initialPrimaryColor);
+
+  // Delegación de eventos global para navegación
+  document.addEventListener('click', (e) => {
+    // Zoom para imágenes y diagramas Mermaid
+    const zoomTarget = e.target.closest('pre.mermaid svg, img:not(.no-zoom)');
+    if (zoomTarget) {
+      openZoomModal(zoomTarget);
+      return;
+    }
+
+    const navLink = e.target.closest('.sidebar .nav-link');
+    if (navLink) {
+      // Activar visualmente el link
+      navLinks.forEach(link => link.classList.remove('active'));
+      navLink.classList.add('active');
+
+      // Cambio de vista SPA (Lógica de páginas)
+      const targetPageId = navLink.getAttribute('data-page');
+      if (targetPageId) {
+          document.querySelectorAll('.page-view').forEach(page => {
+              page.classList.add('d-none');
+          });
+          const targetPage = document.getElementById(targetPageId);
+          if (targetPage) {
+              targetPage.classList.remove('d-none');
+              
+              // Lazy loading modules if not loaded
+              if (!targetPage.hasAttribute('data-loaded')) {
+                  if (targetPageId === 'page-login') {
+                      targetPage.setAttribute('data-loaded', 'true');
+                      targetPage.innerHTML = '<div class="p-5 text-center text-white"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Cargando módulo...</div></div>';
+                      import('./demos/login.js').then(module => module.init(targetPage)).catch(console.error);
+                  } else if (targetPageId === 'page-store') {
+                      targetPage.setAttribute('data-loaded', 'true');
+                      targetPage.innerHTML = '<div class="p-5 text-center text-white"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Cargando módulo...</div></div>';
+                      import('./demos/store.js').then(module => module.init(targetPage)).catch(console.error);
+                  }
+              }
+          }
+          
+          // Ocultar / Mostrar el navbar superior de GlassKit Workspace (ajustado para móvil)
+          adjustNavbarVisibility(targetPageId);
+      }
+
+      // Cerrar sidebar en móviles tras hacer clic
+      if (window.innerWidth < 992) {
+        document.body.classList.remove('sidebar-mobile-open');
+      }
+
+      // Actualizar título del navbar basado en el link seleccionado
+      const titleSpan = navLink.querySelector('span');
+      if (titleSpan) {
+        updateNavbarTitle(titleSpan.textContent.trim());
+      }
+    }
+
+    // Toggle de la barra lateral (Desktop & Mobile)
+    if (e.target.closest('.toggle-sidebar-btn')) {
+      if (window.innerWidth >= 992) {
+        document.body.classList.toggle('sidebar-collapsed');
+      } else {
+        document.body.classList.toggle('sidebar-mobile-open');
+      }
+    }
+
+    // Cerrar sidebar si hacemos click en el overlay (Móviles)
+    if (e.target.closest('.sidebar-overlay')) {
+      document.body.classList.remove('sidebar-mobile-open');
+    }
+  });
+
+  // Hacer que al hacer clic en el logo/título del sidebar se suba al tope de la página
+  const sidebarLogo = document.querySelector('.sidebar-logo-container');
+  if (sidebarLogo) {
+    sidebarLogo.style.cursor = 'pointer';
+    sidebarLogo.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  }
+  
+  // Lógica de ScrollSpy (Highlight dinámico en Navbar)
+  const glassNav = document.querySelector('.glass-nav');
+  window.addEventListener('scroll', () => {
+    // Añadir clase scrolled al navbar
+    if (glassNav) {
+      if (window.scrollY > 10) {
+        glassNav.classList.add('scrolled');
+      } else {
+        glassNav.classList.remove('scrolled');
+      }
+    }
+
+    if(document.getElementById('page-dashboard') && document.getElementById('page-dashboard').classList.contains('d-none')) return;
+    
+    let current = '';
+    contentSections.forEach(section => {
+      // Ignorar secciones que pertenezcan a páginas ocultas (display: none)
+      if (section.offsetParent === null) return;
+
+      const sectionTop = section.offsetTop;
+      if (window.scrollY >= (sectionTop - 250)) {
+        current = section.getAttribute('id');
+      }
+    });
+
+    // Restaurar el título original si estamos en la parte superior
+    if (window.scrollY < 100) {
+      const activeLink = document.querySelector('.sidebar .nav-link.active span');
+      if (activeLink) {
+        updateNavbarTitle(activeLink.textContent.trim());
+      }
+    }
+
+    navLinks.forEach(link => {
+      link.classList.remove('active');
+      if (link.getAttribute('href') === '#' + current) {
+        link.classList.add('active');
+
+        // Actualizar título del navbar basado en la sección visible solo si hemos bajado
+        if (window.scrollY >= 100) {
+          const titleSpan = link.querySelector('span');
+          if (titleSpan) {
+            updateNavbarTitle(titleSpan.textContent.trim());
+          }
+        }
+      }
+    });
+  });
+
+  // Disparar evento de scroll inicial para setear estado
+  window.dispatchEvent(new Event('scroll'));
+
+  console.log('🚀 GlassKit inicializado (Light DOM). Temas habilitados.');
+}
+
+// Auto-inicialización si se importa directamente en el navegador
+if (typeof window !== 'undefined') {
+  initGlassKitUI();
+  // Exponer el ThemeManager a nivel global para que puedas llamarlo desde la consola o botones
+  window.ThemeManager = ThemeManager;
+  
+  // Exponer el Toast Alert de GlassKit globalmente (soporta botones de acción opcionales)
+  window.showGlassAlert = function(message, type = 'primary', buttons = []) {
+    let container = document.getElementById('gk-toast-container');
+    if (!container) {
+      container = document.createElement('div');
+      container.id = 'gk-toast-container';
+      container.className = 'position-fixed top-0 end-0 p-3';
+      container.style.zIndex = '9999';
+      document.body.appendChild(container);
+    }
+    
+    const toast = document.createElement('div');
+    const hasButtons = buttons && buttons.length > 0;
+    toast.className = `alert alert-${type} alert-toast p-3 mb-2 rounded-3 shadow-lg d-flex align-items-center justify-content-between ${hasButtons ? 'has-actions' : ''}`;
+    
+    let iconClass = 'bi-info-circle-fill';
+    let textClass = 'text-info';
+    if (type === 'success') { iconClass = 'bi-check-circle-fill'; textClass = 'text-success'; }
+    if (type === 'danger') { iconClass = 'bi-exclamation-triangle-fill'; textClass = 'text-danger'; }
+    if (type === 'warning') { iconClass = 'bi-exclamation-circle-fill'; textClass = 'text-warning'; }
+    if (type === 'primary') { iconClass = 'bi-info-circle-fill'; textClass = 'text-primary'; }
+
+    let html = `
+      <div class="d-flex align-items-center justify-content-between w-100">
+        <div class="d-flex align-items-center gap-3">
+            <i class="bi ${iconClass} fs-5 ${textClass}"></i>
+            <span style="font-size: 0.95rem; font-weight: 500; text-align: left;">${message}</span>
+        </div>
+        <button type="button" class="btn-close btn-close-white ms-3 small" aria-label="Close" style="font-size: 0.75rem;" onclick="this.closest('.alert-toast').remove()"></button>
+      </div>
+    `;
+
+    if (hasButtons) {
+      html += `
+        <div class="alert-toast-actions w-100">
+      `;
+      buttons.forEach((btn, index) => {
+        html += `<button type="button" class="btn ${btn.class || 'btn-glass-primary'} py-1 px-3 rounded-pill text-white btn-sm" id="toast-btn-${index}" style="font-size: 0.78rem;">${btn.text}</button>`;
+      });
+      html += `</div>`;
+    }
+    
+    toast.innerHTML = html;
+    container.appendChild(toast);
+
+    if (hasButtons) {
+      buttons.forEach((btn, index) => {
+        const btnEl = toast.querySelector(`#toast-btn-${index}`);
+        if (btnEl) {
+          btnEl.onclick = () => {
+            if (btn.onClick) {
+              btn.onClick(toast);
+            } else {
+              toast.remove();
+            }
+          };
+        }
+      });
+    }
+    
+    // Auto-remove after 4 seconds ONLY if there are no buttons
+    if (!hasButtons) {
+      setTimeout(() => {
+        if (toast.parentNode) {
+          toast.style.animation = 'toastFadeOut 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards';
+          setTimeout(() => toast.remove(), 400);
+        }
+      }, 4000);
+    }
+  };
+}

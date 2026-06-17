@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hirata Logística - Control IoT y Arquitectura UML</title>
+    <meta name="description" content="Dashboard estático corporativo y documentación técnica IoT de la flota de transporte Hirata.">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><path d='M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464z'/></svg>">
+
+    <!-- Preconnect to CDNs -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <!-- Highlight.js VS2015 Dark Theme -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/vs2015.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js" defer></script>
+
+    <!-- Custom Style Sheet -->
+    <link rel="stylesheet" href="./src/styles/main.css">
+    
+    <!-- Leaflet Map CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin=""/>
+
+    <!-- CDN Mermaid Library (Required by task 3) -->
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+        window.mermaid = mermaid;
+    </script>
+
+    <style>
+        /* Estilos premium adicionales específicos de Hirata */
+        
+        /* Simulación del mapa GPS */
+        .gps-map-wrapper {
+            position: relative;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            height: 350px;
+        }
+
+        .map-grid-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        .truck-glow-dot {
+            fill: var(--bs-primary);
+            filter: drop-shadow(0 0 8px var(--bs-primary));
+            transition: all 0.5s ease-out;
+        }
+
+        .alert-glow-dot {
+            fill: var(--bs-danger);
+            filter: drop-shadow(0 0 8px var(--bs-danger));
+            animation: blinker 1s linear infinite;
+        }
+
+        @keyframes blinker {
+            50% { opacity: 0; }
+        }
+
+        /* Lista de camiones interactivas */
+        .truck-list-group {
+            max-height: 350px;
+            overflow-y: auto;
+        }
+
+        .truck-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+
+        .truck-item:hover, .truck-item.active {
+            background: rgba(var(--bs-primary-rgb), 0.15);
+            border-color: var(--bs-primary);
+            box-shadow: 0 4px 12px rgba(var(--bs-primary-rgb), 0.15);
+        }
+
+        /* Indicador de temperatura visual (Termómetro) */
+        .thermometer-visual {
+            width: 35px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 20px;
+            position: relative;
+            margin: 0 auto;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding: 4px;
+        }
+
+        .thermometer-fill {
+            width: 100%;
+            background: linear-gradient(180deg, var(--bs-info) 0%, var(--bs-primary) 100%);
+            border-radius: 16px;
+            transition: height 0.5s ease, background 0.3s ease;
+        }
+
+        .thermometer-fill.critical {
+            background: linear-gradient(180deg, var(--bs-danger) 0%, #ff4d4d 100%);
+            animation: thermal-pulse 1s infinite alternate;
+        }
+
+        @keyframes thermal-pulse {
+            from { filter: brightness(1); }
+            to { filter: brightness(1.3); }
+        }
+
+        .thermometer-threshold-line {
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: var(--bs-danger);
+            box-shadow: 0 0 5px var(--bs-danger);
+            z-index: 10;
+            transition: bottom 0.3s ease;
+        }
+
+        /* Consola de base de datos MySQL */
+        .sql-log-panel {
+            background: rgba(0, 0, 0, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.82rem;
+            height: 180px;
+            overflow-y: auto;
+            padding: 12px;
+            box-shadow: inset 0 4px 12px rgba(0, 0, 0, 0.5);
+            color: #a3cfbb;
+        }
+
+        .sql-line {
+            border-left: 3px solid #198754;
+            padding-left: 8px;
+            margin-bottom: 5px;
+            animation: query-slide 0.3s ease-out;
+        }
+
+        @keyframes query-slide {
+            from { transform: translateY(-5px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Estilo para los diagramas Mermaid en modo zoom */
+        pre.mermaid {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: zoom-in;
+            transition: background-color 0.3s;
+            width: 100%;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        pre.mermaid:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        pre.mermaid svg {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="ambient-orb"></div>
+    <div class="sidebar-overlay"></div>
+
+    <div class="d-flex">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar d-flex flex-column" id="sidebarMenu" tabindex="-1">
+            <header class="d-flex justify-content-between align-items-center p-3 border-bottom border-light border-opacity-25" id="sidebarHeader">
+                <div class="sidebar-logo-container d-flex align-items-center">
+                    <i class="bi bi-truck me-2 text-primary fs-4" id="sidebarLogoIcon"></i>
+                    <div class="sidebar-logo-text ms-1">
+                        <h4 class="fw-bold m-0 text-white" style="font-size: 1.15rem; letter-spacing: 1px;">HIRATA LOGÍSTICA</h4>
+                    </div>
+                </div>
+                <button class="toggle-sidebar-btn" id="sidebarToggleBtn" aria-label="Toggle Sidebar">
+                    <div class="hamburger-lines">
+                        <span class="line line1"></span>
+                        <span class="line line2"></span>
+                        <span class="line line3"></span>
+                    </div>
+                </button>
+            </header>
+
+            <div class="pt-3 flex-grow-1">
+                <div class="px-3">
+                    <div class="sidebar-group-title text-white text-opacity-50 small fw-bold px-2 mb-2" style="font-size: 0.72rem;">CORE DASHBOARD</div>
+                    
+                    <a href="#overview-section" class="nav-link active" data-page="page-dashboard"> 
+                        <i class="bi bi-speedometer2 me-3"></i> <span>Vista General</span> 
+                    </a>
+                    <a href="#gps-section" class="nav-link" data-page="page-dashboard"> 
+                        <i class="bi bi-geo-alt me-3"></i> <span>Monitoreo GPS (RF-10)</span> 
+                    </a>
+                    <a href="#temp-section" class="nav-link" data-page="page-dashboard"> 
+                        <i class="bi bi-thermometer-half me-3"></i> <span>Control Temp. (RF-13)</span> 
+                    </a>
+                    <a href="#db-section" class="nav-link" data-page="page-dashboard"> 
+                        <i class="bi bi-database me-3"></i> <span>Persistencia BD (RF-11)</span> 
+                    </a>
+                    <a href="#reports-section" class="nav-link" data-page="page-dashboard"> 
+                        <i class="bi bi-file-earmark-bar-graph me-3"></i> <span>Reportes (RF-12)</span> 
+                    </a>
+                    
+                    <div class="my-3 border-top border-light border-opacity-25"></div>
+                    <div class="sidebar-group-title text-white text-opacity-50 small fw-bold px-2 mb-2" style="font-size: 0.72rem;">ARQUITECTURA UML</div>
+                    
+                    <a href="#docs-section" class="nav-link" data-page="page-docs"> 
+                        <i class="bi bi-journal-code me-3"></i> <span>Documentación UML</span> 
+                    </a>
+                    
+                    <div class="my-3 border-top border-light border-opacity-25"></div>
+                    <div class="sidebar-group-title text-white text-opacity-50 small fw-bold px-2 mb-2" style="font-size: 0.72rem;">HERRAMIENTAS</div>
+                    
+                    <a href="#theme-section" class="nav-link" data-page="page-dashboard"> 
+                        <i class="bi bi-palette me-3"></i> <span>Configurar Temas</span> 
+                    </a>
+                </div>
+            </div>
+
+            <div class="mt-auto my-3 border-top border-light border-opacity-25"></div>
+            <footer class="mb-4 text-center px-3 pt-2">
+                <small class="text-white text-opacity-50 d-block">
+                    <span class="sidebar-text-full">Prototipo Estático IoT</span>
+                    <span class="sidebar-text-short d-none">IoT.</span>
+                </small>
+            </footer>
+        </nav>
+
+        <!-- Main Workspace Area -->
+        <main class="main-content flex-grow-1 w-100">
+            <!-- Glass Header / Navbar -->
+            <gk-navbar id="main-navbar" title="Hirata Fleet Monitoring System">
+                <div slot="actions" class="badge badge-glass bg-primary bg-opacity-25 text-primary border-primary border-opacity-50 me-3 d-none d-lg-block">
+                    PROTOTIPO V2.0
+                </div>
+                <div slot="actions" class="rounded-circle border border-primary border-opacity-50 bg-primary bg-opacity-25 text-primary d-none d-lg-flex justify-content-center align-items-center"
+                    style="width: 40px; height: 40px; font-weight: bold; font-family: monospace;">IoT</div>
+            </gk-navbar>
+
+            <!-- Page Views Wrapper -->
+            <div class="w-100 position-relative">
+                
+                <!-- VIEW 1: DASHBOARD -->
+                <div id="page-dashboard" class="page-view active">
+                    
+                    <!-- Section: Overview -->
+                    <section id="overview-section" class="content-section mb-5 pt-4">
+                        <div class="glass-card p-5 mb-4">
+                            <div class="row align-items-center">
+                                <div class="col-lg-8">
+                                    <h1 class="display-6 fw-bold text-white mb-3">Portal de Monitoreo Hirata</h1>
+                                    <p class="lead text-white text-opacity-75">
+                                        Prototipo conceptual estático para la supervisión logística en tiempo real, monitoreo de cadena de frío y auditoría de persistencia de datos.
+                                    </p>
+                                    <p class="text-white text-opacity-50 fs-6">
+                                        Selecciona una opción del menú lateral o navega a través de las tarjetas a continuación para probar los flujos interactivos de cada requerimiento de negocio.
+                                    </p>
+                                </div>
+                                <div class="col-lg-4 text-center d-none d-lg-block">
+                                    <i class="bi bi-shield-check text-primary" style="font-size: 8rem; filter: drop-shadow(0 0 20px rgba(var(--bs-primary-rgb), 0.4));"></i>
+                                </div>
+                            </div>
+                            
+                            <hr class="border-light border-opacity-25 my-4">
+                            
+                            <!-- KPI Indicator Cards -->
+                            <div class="row g-4 mt-2">
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="glass-card p-3 h-100 border-primary border-opacity-25">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-white text-opacity-70 small fw-medium">GPS Activos (RF-10)</span>
+                                            <i class="bi bi-geo-fill text-primary"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-white mb-1" id="kpi-gps-count">3 / 3</h3>
+                                        <span class="badge badge-glass bg-success bg-opacity-25 text-success border-success" style="font-size: 0.7rem;">Transmitiendo Ok</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="glass-card p-3 h-100 border-danger border-opacity-25">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-white text-opacity-70 small fw-medium">Cadena de Frío (RF-13)</span>
+                                            <i class="bi bi-thermometer-high text-danger"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-white mb-1" id="kpi-temp-status">2 OK / 1 Alerta</h3>
+                                        <span class="badge badge-glass bg-warning bg-opacity-25 text-warning border-warning" style="font-size: 0.7rem;" id="kpi-temp-badge">Límite: -15.0°C</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="glass-card p-3 h-100 border-success border-opacity-25">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-white text-opacity-70 small fw-medium">Base de Datos (RF-11)</span>
+                                            <i class="bi bi-database-fill-check text-success"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-white mb-1" id="kpi-db-records">58,914</h3>
+                                        <span class="badge badge-glass bg-success bg-opacity-25 text-success border-success" style="font-size: 0.7rem;">MySQL Online</span>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="glass-card p-3 h-100 border-info border-opacity-25">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <span class="text-white text-opacity-70 small fw-medium">Informes (RF-12)</span>
+                                            <i class="bi bi-file-earmark-bar-graph-fill text-info"></i>
+                                        </div>
+                                        <h3 class="fw-bold text-white mb-1">Automatizados</h3>
+                                        <span class="badge badge-glass bg-info bg-opacity-25 text-info border-info" style="font-size: 0.7rem;">Soporte PDF/CSV</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section: Panel RF-10 (GPS) -->
+                    <section id="gps-section" class="content-section mb-5 pt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="h4 m-0 fw-bold text-white"><i class="bi bi-geo-alt-fill text-primary me-2"></i>Monitoreo GPS en Tiempo Real (RF-10)</h3>
+                            <span class="badge badge-glass bg-primary bg-opacity-25 text-primary border-primary border-opacity-50">Localización</span>
+                        </div>
+                        
+                        <div class="row g-4">
+                            <!-- Left: Truck Selector -->
+                            <div class="col-lg-4">
+                                <div class="glass-card p-4 h-100 d-flex flex-column">
+                                    <h5 class="h6 fw-bold mb-3"><i class="bi bi-list-stars me-2 text-primary"></i>Seleccionar Unidad</h5>
+                                    <p class="text-white text-opacity-50 small mb-3">Haz clic en un camión de la flota para seguir su telemetría e inspeccionar su ruta actual en el mapa conceptual.</p>
+                                    
+                                    <div class="truck-list-group d-flex flex-column gap-2 flex-grow-1" id="gps-truck-list">
+                                        <!-- Truck H-101 -->
+                                        <div class="truck-item p-3 active" data-truck="H-101">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="fw-bold text-white">Camión H-101</div>
+                                                <span class="badge bg-success rounded-pill px-2">En Ruta</span>
+                                            </div>
+                                            <div class="text-white text-opacity-50 small mt-1">Ruta: Valparaíso ➔ Santiago</div>
+                                            <div class="text-white text-opacity-40 small d-flex justify-content-between mt-1">
+                                                <span>Vel: <strong class="text-white" id="truck-H-101-speed">78 km/h</strong></span>
+                                                <span id="truck-H-101-temp">-17.8 °C</span>
+                                            </div>
+                                        </div>
+                                        <!-- Truck H-102 -->
+                                        <div class="truck-item p-3" data-truck="H-102">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="fw-bold text-white">Camión H-102</div>
+                                                <span class="badge bg-warning text-dark rounded-pill px-2" id="badge-truck-H-102">Alerta Temp.</span>
+                                            </div>
+                                            <div class="text-white text-opacity-50 small mt-1">Ruta: Coquimbo ➔ Santiago</div>
+                                            <div class="text-white text-opacity-40 small d-flex justify-content-between mt-1">
+                                                <span>Vel: <strong class="text-white" id="truck-H-102-speed">82 km/h</strong></span>
+                                                <span class="text-danger" id="truck-H-102-temp">-14.1 °C</span>
+                                            </div>
+                                        </div>
+                                        <!-- Truck H-103 -->
+                                        <div class="truck-item p-3" data-truck="H-103">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div class="fw-bold text-white">Camión H-103</div>
+                                                <span class="badge bg-secondary rounded-pill px-2">Detenido</span>
+                                            </div>
+                                            <div class="text-white text-opacity-50 small mt-1">Ruta: Talca ➔ Santiago</div>
+                                            <div class="text-white text-opacity-40 small d-flex justify-content-between mt-1">
+                                                <span>Vel: <strong class="text-white" id="truck-H-103-speed">0 km/h</strong></span>
+                                                <span id="truck-H-103-temp">-19.0 °C</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Right: Map Simulation & Telemetry -->
+                            <div class="col-lg-8">
+                                <div class="glass-card p-4 h-100">
+                                    <div class="row g-3 h-100">
+                                        <!-- Map Graphics -->
+                                        <div class="col-md-7 h-100">
+                                            <div class="gps-map-wrapper p-1" style="height: 100%; min-height: 350px;">
+                                                <div id="gps-leaflet-map" style="width: 100%; height: 100%; border-radius: 10px; z-index: 1;"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Telemetry stats -->
+                                        <div class="col-md-5 d-flex flex-column h-100">
+                                            <h5 class="h6 fw-bold mb-3"><i class="bi bi-activity me-2 text-primary"></i>Datos del Dispositivo</h5>
+                                            
+                                            <div class="d-flex flex-column justify-content-between mb-3 flex-grow-1 pe-1">
+                                                <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-25 p-2 px-3 rounded-3 border border-light border-opacity-10">
+                                                    <span class="text-white text-opacity-50 small"><i class="bi bi-truck me-2"></i>Unidad:</span>
+                                                    <span class="fw-bold text-white" id="tel-unit">Camión H-101</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-25 p-2 px-3 rounded-3 border border-light border-opacity-10">
+                                                    <span class="text-white text-opacity-50 small"><i class="bi bi-person-badge me-2"></i>Conductor:</span>
+                                                    <span class="text-white text-end" id="tel-driver">Carlos Mendoza</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-25 p-2 px-3 rounded-3 border border-light border-opacity-10">
+                                                    <span class="text-white text-opacity-50 small"><i class="bi bi-upc-scan me-2"></i>Patente:</span>
+                                                    <span class="text-white font-monospace text-end" id="tel-plate">HR-3498</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-25 p-2 px-3 rounded-3 border border-light border-opacity-10">
+                                                    <span class="text-white text-opacity-50 small"><i class="bi bi-speedometer2 me-2"></i>Velocidad:</span>
+                                                    <span class="text-info fw-bold text-end" id="tel-speed">78 km/h</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-25 p-2 px-3 rounded-3 border border-light border-opacity-10">
+                                                    <span class="text-white text-opacity-50 small"><i class="bi bi-compass me-2"></i>Latitud:</span>
+                                                    <span class="text-white font-monospace text-end" id="tel-lat">-33.0456</span>
+                                                </div>
+                                                <div class="d-flex justify-content-between align-items-center bg-dark bg-opacity-25 p-2 px-3 rounded-3 border border-light border-opacity-10">
+                                                    <span class="text-white text-opacity-50 small"><i class="bi bi-compass me-2"></i>Longitud:</span>
+                                                    <span class="text-white font-monospace text-end" id="tel-lng">-71.6198</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <div class="mt-auto pt-2 border-top border-light border-opacity-10">
+                                                <div class="alert alert-info py-2 px-3 m-0 rounded-3 border-info border-opacity-25 d-flex align-items-center justify-content-center" role="alert" style="font-size: 0.78rem; pointer-events: none; user-select: none; opacity: 0.85;">
+                                                    <i class="bi bi-info-circle-fill me-2 fs-6"></i>
+                                                    <span>Satelital activo banda 2.4GHz</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section: Panel RF-13 (Temperature Control) -->
+                    <section id="temp-section" class="content-section mb-5 pt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="h4 m-0 fw-bold text-white"><i class="bi bi-thermometer-snow text-danger me-2"></i>Control de Temperatura de Carga (RF-13)</h3>
+                            <span class="badge badge-glass bg-danger bg-opacity-25 text-danger border-danger border-opacity-50">Cadena de Frío</span>
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Left: Thermometers & Alert Indicator -->
+                            <div class="col-lg-6">
+                                <div class="glass-card p-4 h-100">
+                                    <h5 class="h6 fw-bold mb-4"><i class="bi bi-eye-fill me-2 text-danger"></i>Termómetros Flotantes</h5>
+                                    
+                                    <div class="row text-center mt-2">
+                                        <!-- H-101 -->
+                                        <div class="col-4">
+                                            <div class="thermometer-visual">
+                                                <div class="thermometer-threshold-line" style="bottom: 40px;" id="threshold-mark-1"></div>
+                                                <div class="thermometer-fill" style="height: 60%;" id="thermometer-H-101"></div>
+                                            </div>
+                                            <div class="mt-3 fw-bold small text-white">H-101</div>
+                                            <div class="small text-white text-opacity-70 mt-1" id="temp-val-H-101">-17.8 °C</div>
+                                        </div>
+                                        <!-- H-102 -->
+                                        <div class="col-4">
+                                            <div class="thermometer-visual">
+                                                <div class="thermometer-threshold-line" style="bottom: 40px;" id="threshold-mark-2"></div>
+                                                <div class="thermometer-fill critical" style="height: 85%;" id="thermometer-H-102"></div>
+                                            </div>
+                                            <div class="mt-3 fw-bold small text-white">H-102</div>
+                                            <div class="small text-danger mt-1 fw-bold" id="temp-val-H-102">-14.1 °C</div>
+                                        </div>
+                                        <!-- H-103 -->
+                                        <div class="col-4">
+                                            <div class="thermometer-visual">
+                                                <div class="thermometer-threshold-line" style="bottom: 40px;" id="threshold-mark-3"></div>
+                                                <div class="thermometer-fill" style="height: 52%;" id="thermometer-H-103"></div>
+                                            </div>
+                                            <div class="mt-3 fw-bold small text-white">H-103</div>
+                                            <div class="small text-white text-opacity-70 mt-1" id="temp-val-H-103">-19.0 °C</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Right: Threshold Adjuster & Alert Log -->
+                            <div class="col-lg-6">
+                                <div class="glass-card p-4 h-100 d-flex flex-column">
+                                    <h5 class="h6 fw-bold mb-3"><i class="bi bi-sliders me-2 text-danger"></i>Ajustar Límite Crítico de Temperatura</h5>
+                                    <p class="text-white text-opacity-50 small mb-4">La carga refrigerada requiere condiciones de congelado estricto. Si la lectura supera este valor, se disparará una alerta inmediata en el panel.</p>
+                                    
+                                    <!-- Temperature Slider -->
+                                    <div class="mb-4">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <label for="tempThresholdSlider" class="form-label text-white text-opacity-75 m-0">Umbral de Alerta:</label>
+                                            <span class="badge bg-danger fs-6 px-3 py-1 font-monospace" id="slider-val-label">-15.0 °C</span>
+                                        </div>
+                                        <input type="range" class="form-range" min="-25" max="-10" step="0.5" id="tempThresholdSlider" value="-15.0">
+                                        <div class="d-flex justify-content-between text-white text-opacity-40 small mt-1">
+                                            <span>-25.0 °C (Ultra-frío)</span>
+                                            <span>-10.0 °C (Riesgoso)</span>
+                                        </div>
+                                    </div>
+
+                                    <!-- Temperature Alerts Log -->
+                                    <h5 class="h6 fw-bold mb-2"><i class="bi bi-bell-fill me-2 text-danger"></i>Registro de Incidentes de Temperatura</h5>
+                                    <div class="console-panel flex-grow-1 p-3 mt-2" id="temp-alerts-log" style="height: 150px;">
+                                        <!-- Interactive Logs dynamically populated -->
+                                        <div class="console-line danger">[ALERTA] Camión H-102 reporta -14.1°C (Excede límite de -15.0°C).</div>
+                                        <div class="console-line system">[Sistema] Monitoreo térmico inicializado.</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section: Panel RF-11 (Database Persistence) -->
+                    <section id="db-section" class="content-section mb-5 pt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="h4 m-0 fw-bold text-white"><i class="bi bi-database-fill text-success me-2"></i>Almacenamiento Histórico MySQL (RF-11)</h3>
+                            <span class="badge badge-glass bg-success bg-opacity-25 text-success border-success border-opacity-50">Persistencia</span>
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- SQL console simulator -->
+                            <div class="col-lg-5">
+                                <div class="glass-card p-4 h-100 d-flex flex-column">
+                                    <h5 class="h6 fw-bold mb-3"><i class="bi bi-terminal me-2 text-success"></i>Consola de Sentencias MySQL</h5>
+                                    <p class="text-white text-opacity-50 small mb-3">Audita en tiempo real las consultas <code>INSERT</code> de persistencia automática del agente IoT.</p>
+                                    
+                                    <div class="sql-log-panel flex-grow-1 mb-3" id="mysql-query-log">
+                                        <div class="sql-line">INSERT INTO lecturas_sensor (camion_id, latitud, longitud, temperatura, fecha) VALUES ('H-103', -35.4264, -71.6554, -19.0, NOW());</div>
+                                        <div class="sql-line">INSERT INTO lecturas_sensor (camion_id, latitud, longitud, temperatura, fecha) VALUES ('H-102', -29.9533, -71.3395, -14.1, NOW());</div>
+                                        <div class="sql-line">INSERT INTO lecturas_sensor (camion_id, latitud, longitud, temperatura, fecha) VALUES ('H-101', -33.0456, -71.6198, -17.8, NOW());</div>
+                                    </div>
+
+                                    <div class="d-flex gap-2">
+                                        <button class="btn btn-glass-success btn-sm flex-grow-1" id="btn-db-insert">
+                                            <i class="bi bi-plus-circle me-2"></i>Forzar INSERT
+                                        </button>
+                                        <button class="btn btn-glass-secondary btn-sm" id="btn-db-clear">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Database Records Table -->
+                            <div class="col-lg-7">
+                                <div class="glass-card p-4 h-100">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="h6 fw-bold m-0"><i class="bi bi-table me-2 text-success"></i>Tabla: <code>lecturas_sensor</code></h5>
+                                        <span class="badge bg-success bg-opacity-25 text-success border border-success border-opacity-25 font-monospace">MySQL Engine: InnoDB</span>
+                                    </div>
+                                    
+                                    <div class="table-responsive" style="max-height: 250px; overflow-y: auto;">
+                                        <table class="table table-glass table-hover table-striped align-middle mb-0" style="font-size: 0.85rem;">
+                                            <thead>
+                                                <tr>
+                                                    <th>ID</th>
+                                                    <th>Fecha/Hora</th>
+                                                    <th>Camión</th>
+                                                    <th>Ubicación (GPS)</th>
+                                                    <th>Temp</th>
+                                                    <th class="text-end">Estado</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="db-table-body">
+                                                <!-- Dyn table records -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section: Panel RF-12 (Reports) -->
+                    <section id="reports-section" class="content-section mb-5 pt-4">
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h3 class="h4 m-0 fw-bold text-white"><i class="bi bi-file-earmark-bar-graph-fill text-info me-2"></i>Generador de Reportes Logísticos (RF-12)</h3>
+                            <span class="badge badge-glass bg-info bg-opacity-25 text-info border-info border-opacity-50">Reportes</span>
+                        </div>
+
+                        <div class="row g-4">
+                            <!-- Report parameters form -->
+                            <div class="col-lg-4">
+                                <div class="glass-card p-4 h-100">
+                                    <h5 class="h6 fw-bold mb-3"><i class="bi bi-sliders2-vertical me-2 text-info"></i>Configuración de Reporte</h5>
+                                    
+                                    <form id="report-form" onsubmit="event.preventDefault();">
+                                        <div class="mb-3">
+                                            <label class="form-label text-white text-opacity-75 small">Unidad de Transporte</label>
+                                            <select class="form-select" id="report-truck">
+                                                <option value="H-101" selected>Camión H-101 (Valparaíso - Santiago)</option>
+                                                <option value="H-102">Camión H-102 (Coquimbo - Santiago)</option>
+                                                <option value="H-103">Camión H-103 (Talca - Santiago)</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="mb-3">
+                                            <label class="form-label text-white text-opacity-75 small">Rango de Tiempo</label>
+                                            <select class="form-select" id="report-range">
+                                                <option value="today" selected>Hoy (Últimas 24 Horas)</option>
+                                                <option value="7days">Últimos 7 Días</option>
+                                                <option value="30days">Últimos 30 Días</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="mb-3">
+                                            <label class="form-label text-white text-opacity-75 small">Tipo de Análisis</label>
+                                            <select class="form-select" id="report-type">
+                                                <option value="efficiency" selected>Eficiencia de Rutas y GPS</option>
+                                                <option value="thermal">Rendimiento de Cadena de Frío</option>
+                                                <option value="consolidated">Reporte Consolidado Operacional</option>
+                                            </select>
+                                        </div>
+
+                                        <button type="button" class="btn btn-glass-info w-100 mt-2 py-2" id="btn-generate-report">
+                                            <i class="bi bi-cogs me-2"></i>Generar Informe
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+
+                            <!-- Generated Report Output -->
+                            <div class="col-lg-8">
+                                <div class="glass-card p-4 h-100 d-flex flex-column justify-content-center" id="report-output-card">
+                                    <!-- Initially waiting state -->
+                                    <div class="text-center py-5 text-white text-opacity-50" id="report-idle-state">
+                                        <i class="bi bi-file-earmark-text fs-1 text-info opacity-50 mb-3 d-block"></i>
+                                        <h5>Filtros configurados. Listo para generar.</h5>
+                                        <p class="small m-0">Completa los parámetros de la izquierda y haz clic en "Generar Informe".</p>
+                                    </div>
+
+                                    <!-- Loading state -->
+                                    <div class="text-center py-5 text-white d-none" id="report-loading-state">
+                                        <div class="spinner-border text-info mb-3" role="status"></div>
+                                        <h5 id="report-loader-text">Consultando MySQL...</h5>
+                                        <div class="progress bg-dark bg-opacity-50 mx-auto rounded-pill border border-light border-opacity-10 mt-3" style="width: 250px; height: 6px;">
+                                            <div class="progress-bar progress-bar-striped progress-bar-animated bg-info" id="report-progress" role="progressbar" style="width: 0%;"></div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Report Preview Card -->
+                                    <div class="d-none w-100" id="report-preview-state">
+                                        <div class="d-flex justify-content-between align-items-start border-bottom border-light border-opacity-25 pb-3 mb-3">
+                                            <div>
+                                                <h4 class="fw-bold text-white mb-1" id="rep-title">INFORME DE EFICIENCIA DE RUTA</h4>
+                                                <p class="text-white text-opacity-50 small m-0" id="rep-subtitle">Unidad: Camión H-101 | Rango: Hoy</p>
+                                            </div>
+                                            <span class="badge bg-info text-white rounded-pill px-3 py-1 font-monospace" id="rep-code">REP-H101-529A</span>
+                                        </div>
+
+                                        <div class="row g-3">
+                                            <div class="col-md-6">
+                                                <p class="text-white text-opacity-50 small mb-2">Métricas Consolidadas</p>
+                                                <ul class="list-group list-group-flush bg-transparent">
+                                                    <li class="list-group-item bg-transparent text-white border-light border-opacity-10 d-flex justify-content-between px-0 py-2">
+                                                        <span><i class="bi bi-speedometer2 text-white me-2"></i>Velocidad Promedio:</span>
+                                                        <strong id="rep-metric-1">75.4 km/h</strong>
+                                                    </li>
+                                                    <li class="list-group-item bg-transparent text-white border-light border-opacity-10 d-flex justify-content-between px-0 py-2">
+                                                        <span><i class="bi bi-clock-history text-white me-2"></i>Tiempo en Movimiento:</span>
+                                                        <strong id="rep-metric-2">8.2 Hrs</strong>
+                                                    </li>
+                                                    <li class="list-group-item bg-transparent text-white border-light border-opacity-10 d-flex justify-content-between px-0 py-2">
+                                                        <span><i class="bi bi-exclamation-triangle text-white me-2"></i>Desviaciones Térmicas:</span>
+                                                        <strong class="text-success" id="rep-metric-3">0 Incidencias</strong>
+                                                    </li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="col-md-6">
+                                                <p class="text-white text-opacity-50 small mb-2">Cumplimiento General</p>
+                                                <div class="glass-card p-3 text-center border-light border-opacity-10 mb-3 bg-dark bg-opacity-25">
+                                                    <span class="d-block text-white text-opacity-50 small mb-1">Índice de Calidad de Carga</span>
+                                                    <h2 class="fw-bold text-info m-0" id="rep-metric-score">98.5%</h2>
+                                                    <span class="text-success small"><i class="bi bi-check-circle-fill me-1"></i>Conforme a Norma ISO</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Simulated charts with styled divs -->
+                                        <div class="mt-3">
+                                            <p class="text-white text-opacity-50 small mb-2" id="rep-chart-title">Rendimiento Logístico Diario</p>
+                                            <div class="d-flex align-items-end gap-2 bg-dark bg-opacity-25 border border-light border-opacity-10 rounded-3 p-3" style="height: 100px;">
+                                                <div class="bg-info bg-opacity-50 rounded-top text-center w-100" style="height: 80%; cursor: pointer;" title="Lunes: 80%"></div>
+                                                <div class="bg-info bg-opacity-50 rounded-top text-center w-100" style="height: 95%; cursor: pointer;" title="Martes: 95%"></div>
+                                                <div class="bg-info bg-opacity-75 rounded-top text-center w-100" style="height: 98%; cursor: pointer;" title="Miércoles (Hoy): 98%"></div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Actions -->
+                                        <div class="d-flex gap-2 justify-content-end mt-4 pt-3 border-top border-light border-opacity-25">
+                                            <button class="btn btn-glass-secondary btn-sm px-3" onclick="showGlassAlert('Exportación de reporte a Excel completada.', 'success')">
+                                                <i class="bi bi-file-earmark-excel me-2"></i>Exportar CSV
+                                            </button>
+                                            <button class="btn btn-glass-info btn-sm px-3" onclick="showGlassAlert('Descarga de reporte PDF iniciada.', 'primary')">
+                                                <i class="bi bi-file-earmark-pdf me-2"></i>Descargar PDF
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Section: Motor de Temas -->
+                    <section id="theme-section" class="content-section mb-5 pt-4">
+                        <div class="glass-card p-4">
+                            <div class="row g-4 align-items-center">
+                                <div class="col-lg-6">
+                                    <h4 class="h5 fw-bold text-white mb-2"><i class="bi bi-palette-fill me-2 text-primary"></i>Motor de Temas Dinámicos</h4>
+                                    <p class="text-white text-opacity-75 mb-0">
+                                        Cambia el esquema de color del sistema. Todos los contenedores translúcidos, botones de control y los diagramas UML de arquitectura se re-renderizarán automáticamente.
+                                    </p>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="d-flex flex-wrap gap-2 justify-content-lg-end">
+                                        <button class="btn btn-glass-secondary theme-btn border-primary px-3 py-2" data-theme="default" onclick="ThemeManager.setTheme('default')">
+                                            <i class="bi bi-moon-stars me-2"></i>Base Dark
+                                        </button>
+                                        <button class="btn btn-glass-secondary theme-btn px-3 py-2" data-theme="cyberpunk" onclick="ThemeManager.setTheme('cyberpunk')">
+                                            <i class="bi bi-lightning-charge text-info me-2"></i>Cyberpunk
+                                        </button>
+                                        <button class="btn btn-glass-secondary theme-btn px-3 py-2" data-theme="nature" onclick="ThemeManager.setTheme('nature')">
+                                            <i class="bi bi-tree text-success me-2"></i>Nature Bio
+                                        </button>
+                                        <button class="btn btn-glass-secondary theme-btn px-3 py-2" data-theme="ubuntu" onclick="ThemeManager.setTheme('ubuntu')">
+                                            <i class="bi bi-ubuntu text-warning me-2"></i>Ubuntu
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- VIEW 2: TECHNICAL DOCUMENTATION (Mermaid) -->
+                <div id="page-docs" class="page-view d-none">
+                    
+                    <section id="docs-section" class="content-section mb-5 pt-4">
+                        <div class="glass-card p-5 mb-4">
+                            <h1 class="display-6 fw-bold text-white mb-2"><i class="bi bi-journal-code text-primary me-2"></i>Documentación Técnica del Sistema</h1>
+                            <p class="lead text-white text-opacity-75 m-0">
+                                Modelamiento estructural y flujo de arquitectura IoT diseñado específicamente para la cadena de distribución Hirata.
+                            </p>
+                            <p class="text-white text-opacity-50 small mt-2">
+                                <i class="bi bi-info-circle me-1"></i> Tip: Haz clic en cualquiera de los diagramas para abrir el visor interactivo con soporte de zoom y arrastre.
+                            </p>
+                        </div>
+
+                        <!-- Class Diagram Card -->
+                        <div class="glass-card p-4 mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-diagram-3-fill text-primary me-2"></i>1. Diagrama de Clases UML</h4>
+                                <span class="badge badge-glass bg-primary bg-opacity-25 text-primary border-primary border-opacity-50">Modelo de Dominio</span>
+                            </div>
+                            <p class="text-white text-opacity-70 small mb-4">
+                                Estructura de clases del sistema que integra la jerarquía de sensores (RF-10, RF-13), el modelo de datos (RF-11) y la generación de reportes (RF-12).
+                            </p>
+                            
+                            <div class="d-flex justify-content-center">
+                                <pre class="mermaid" id="mermaid-class-diagram">
+classDiagram
+    class Camion {
+        +String patente
+        +String modelo
+        +int kilometraje
+        +asignarRuta()
+        +registrarMantenimiento()
+    }
+    class Sensor {
+        &lt;&lt;Abstract&gt;&gt;
+        +String idSensor
+        +String estado
+        +capturarDato()
+    }
+    class SensorGPS {
+        +float latitud
+        +float longitud
+        +obtenerUbicacion()
+    }
+    class SensorTemperatura {
+        +float temperaturaActual
+        +float limiteCritico
+        +verificarAlerta()
+    }
+    class Ruta {
+        +String origen
+        +String destino
+        +float tiempoEstimado
+    }
+    class BaseDeDatosMySQL {
+        +guardarDatoSensor()
+        +consultarHistorial()
+    }
+    class Reporte {
+        +Date fechaEmision
+        +generarInformeRutas()
+        +generarInformeRendimiento()
+    }
+    class Usuario {
+        +String rol
+        +visualizarDashboard()
+    }
+
+    Camion "1" -- "1..*" Sensor : posee
+    Sensor &lt;|-- SensorGPS
+    Sensor &lt;|-- SensorTemperatura
+    Camion "1" -- "1" Ruta : realiza
+    Sensor "1..*" -- "1" BaseDeDatosMySQL : envía datos a
+    BaseDeDatosMySQL "1" -- "1..*" Reporte : provee datos para
+    Usuario "1" -- "1..*" Reporte : solicita
+                                </pre>
+                            </div>
+                        </div>
+
+                        <!-- Architecture Diagram Card -->
+                        <div class="glass-card p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-cpu-fill text-info me-2"></i>2. Diagrama de Arquitectura de Alto Nivel</h4>
+                                <span class="badge badge-glass bg-info bg-opacity-25 text-info border-info border-opacity-50">Flujo IoT</span>
+                            </div>
+                            <p class="text-white text-opacity-70 small mb-4">
+                                Canalización de datos de extremo a extremo, desde la captura telemétrica de hardware móvil hasta la capa de persistencia y portal de presentación.
+                            </p>
+                            
+                            <div class="d-flex justify-content-center">
+                                <pre class="mermaid" id="mermaid-architecture-diagram">
+flowchart TD
+    subgraph "Capa de Dispositivos (Camiones Hirata)"
+        GPS[Sensor GPS RF-10]
+        Temp[Sensor Temperatura RF-13]
+    end
+
+    subgraph "Capa de Conectividad"
+        Red[Red Móvil / Internet]
+    end
+
+    subgraph "Capa de Procesamiento y Persistencia (RF-11)"
+        API[API de Recepción de Datos]
+        DB[(Base de Datos MySQL)]
+    end
+
+    subgraph "Capa de Aplicación y Presentación (GlassKit)"
+        Dash[Dashboard Personal Logística]
+        Rep[Módulo de Reportes RF-12]
+        Alertas[Sistema de Alertas]
+    end
+
+    GPS -->|Datos de Ubicación| Red
+    Temp -->|Datos de Temperatura| Red
+    Red --> API
+    API --> DB
+    DB --> Dash
+    DB --> Rep
+    DB --> Alertas
+                                </pre>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap 5 Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet Map JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script type="module" src="./src/main.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Mouse tracking for ambient orb
+            const orb = document.getElementById('ambient-orb');
+            if (orb) {
+                window.addEventListener('mousemove', (e) => {
+                    requestAnimationFrame(() => {
+                        orb.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+                    });
+                });
+            }
+
+            // Highlight.js initialization
+            if (window.hljs) {
+                document.querySelectorAll('pre code').forEach((el) => {
+                    hljs.highlightElement(el);
+                });
+            }
+            // Leaflet Map Initialization
+            let leafletMap = null;
+            let leafletMarkers = {};
+            let routePolylines = {};
+
+            if (document.getElementById('gps-leaflet-map')) {
+                leafletMap = L.map('gps-leaflet-map', { 
+                    zoomControl: true,
+                    attributionControl: false
+                }).setView([-32.65, -71.1], 6);
+                
+                // Tech dark mode tiles (CartoDB Dark Matter)
+                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    subdomains: 'abcd',
+                    maxZoom: 20
+                }).addTo(leafletMap);
+            }
+
+            // --- ESTADO LOGÍSTICO Y DATOS DE SIMULACIÓN ---
+            const trucksData = {
+                'H-101': {
+                    nombre: 'Camión H-101',
+                    conductor: 'Carlos Mendoza',
+                    patente: 'HR-3498',
+                    velocidad: 78,
+                    lat: -33.0456,
+                    lng: -71.6198,
+                    temp: -17.8,
+                    coordsRoute: [
+                        { lat: -33.0456, lng: -71.6198, cx: 50, cy: 150 },
+                        { lat: -33.1524, lng: -71.4012, cx: 80, cy: 170 },
+                        { lat: -33.2845, lng: -71.1234, cx: 120, cy: 190 },
+                        { lat: -33.3980, lng: -70.8920, cx: 160, cy: 210 },
+                        { lat: -33.4567, lng: -70.6482, cx: 200, cy: 220 }
+                    ],
+                    routeIndex: 0
+                },
+                'H-102': {
+                    nombre: 'Camión H-102',
+                    conductor: 'Roberto Silva',
+                    patente: 'HR-9921',
+                    velocidad: 82,
+                    lat: -29.9533,
+                    lng: -71.3395,
+                    temp: -14.1,
+                    coordsRoute: [
+                        { lat: -29.9533, lng: -71.3395, cx: 120, cy: 40 },
+                        { lat: -30.5512, lng: -71.2012, cx: 135, cy: 80 },
+                        { lat: -31.4234, lng: -71.0543, cx: 155, cy: 120 },
+                        { lat: -32.4920, lng: -70.8845, cx: 175, cy: 170 },
+                        { lat: -33.4567, lng: -70.6482, cx: 200, cy: 220 }
+                    ],
+                    routeIndex: 0
+                },
+                'H-103': {
+                    nombre: 'Camión H-103',
+                    conductor: 'Juan Peralta',
+                    patente: 'HR-0482',
+                    velocidad: 0,
+                    lat: -35.4264,
+                    lng: -71.6554,
+                    temp: -19.0,
+                    coordsRoute: [
+                        { lat: -35.4264, lng: -71.6554, cx: 220, cy: 320 },
+                        { lat: -34.8012, lng: -71.3012, cx: 215, cy: 290 },
+                        { lat: -34.1200, lng: -71.0112, cx: 210, cy: 260 },
+                        { lat: -33.4567, lng: -70.6482, cx: 200, cy: 220 }
+                    ],
+                    routeIndex: 0
+                }
+            };
+
+            let selectedTruckId = 'H-101';
+            let tempThreshold = -15.0;
+
+            const initLeafletMap = () => {
+                if (!leafletMap) return;
+                
+                Object.keys(trucksData).forEach(truckId => {
+                    const data = trucksData[truckId];
+                    // Draw route
+                    const latlngs = data.coordsRoute.map(pt => [pt.lat, pt.lng]);
+                    routePolylines[truckId] = L.polyline(latlngs, {
+                        color: 'rgba(255, 255, 255, 0.4)',
+                        dashArray: '5, 5',
+                        weight: 2
+                    }).addTo(leafletMap);
+                    
+                    // Create marker using DivIcon
+                    const icon = L.divIcon({
+                        className: 'leaflet-truck-marker',
+                        html: `<div class="truck-glow-dot" id="leaflet-dot-${truckId}" style="width:12px; height:12px; background: ${truckId==='H-103'?'#6c757d':(truckId==='H-102'?'var(--bs-danger)':'var(--bs-primary)')}; border-radius:50%; box-shadow: 0 0 10px ${truckId==='H-103'?'#6c757d':(truckId==='H-102'?'var(--bs-danger)':'var(--bs-primary)')};"></div>`,
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                    });
+                    
+                    leafletMarkers[truckId] = L.marker([data.lat, data.lng], { icon }).addTo(leafletMap);
+                    
+                    // Add city labels
+                    if (data.coordsRoute.length > 0) {
+                        const startPt = data.coordsRoute[0];
+                        let cityName = truckId === 'H-101' ? 'Valparaíso' : (truckId === 'H-102' ? 'Coquimbo' : 'Talca');
+                        L.circleMarker([startPt.lat, startPt.lng], { radius: 4, color: '#6c757d', fillOpacity: 1 }).addTo(leafletMap);
+                        L.marker([startPt.lat, startPt.lng], {
+                            icon: L.divIcon({ className: 'city-label border-0 bg-transparent', html: `<div style="color:white; font-size:10px; font-weight:bold; margin-left: 10px; margin-top: -5px; text-shadow: 0 0 3px black;">${cityName}</div>` })
+                        }).addTo(leafletMap);
+                    }
+                });
+                
+                // Santiago Hub
+                L.circleMarker([-33.4567, -70.6482], { radius: 5, color: '#0d6efd', fillOpacity: 1 }).addTo(leafletMap);
+                L.marker([-33.4567, -70.6482], {
+                    icon: L.divIcon({ className: 'city-label border-0 bg-transparent', html: `<div style="color:#0d6efd; font-size:11px; font-weight:bold; margin-left: 12px; margin-top: -6px; text-shadow: 0 0 3px black;">Santiago (Hub)</div>` })
+                }).addTo(leafletMap);
+            };
+            initLeafletMap();
+
+            // MySQL DB simulated logs
+            let dbRecords = [
+                { id: 1045, timestamp: new Date(Date.now() - 30000).toISOString().replace('T', ' ').substring(0, 19), truck: 'H-101', coords: '-33.0456, -71.6198', temp: '-17.8°C', status: 'PERSISTIDO' },
+                { id: 1044, timestamp: new Date(Date.now() - 60000).toISOString().replace('T', ' ').substring(0, 19), truck: 'H-102', coords: '-29.9533, -71.3395', temp: '-14.1°C', status: 'PERSISTIDO' },
+                { id: 1043, timestamp: new Date(Date.now() - 90000).toISOString().replace('T', ' ').substring(0, 19), truck: 'H-103', coords: '-35.4264, -71.6554', temp: '-19.0°C', status: 'PERSISTIDO' }
+            ];
+
+            // Render MySQL table
+            const renderDbTable = () => {
+                const tableBody = document.getElementById('db-table-body');
+                if (!tableBody) return;
+                tableBody.innerHTML = '';
+                dbRecords.forEach(rec => {
+                    const rowClass = rec.status === 'NUEVO' ? 'table-success text-success fw-bold' : '';
+                    tableBody.innerHTML += `
+                        <tr class="${rowClass}">
+                            <td>#${rec.id}</td>
+                            <td>${rec.timestamp}</td>
+                            <td><span class="badge bg-secondary">${rec.truck}</span></td>
+                            <td class="font-monospace">${rec.coords}</td>
+                            <td class="${parseFloat(rec.temp) > tempThreshold ? 'text-danger fw-bold' : ''}">${rec.temp}</td>
+                            <td class="text-end">
+                                <span class="badge bg-opacity-25 ${parseFloat(rec.temp) > tempThreshold ? 'bg-danger text-danger border-danger' : 'bg-success text-success border-success'} border">
+                                    ${parseFloat(rec.temp) > tempThreshold ? 'ALERTA' : 'PERSISTIDO'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+            };
+
+            // Add MySQL query console log
+            const logSqlQuery = (queryText) => {
+                const logPanel = document.getElementById('mysql-query-log');
+                if (!logPanel) return;
+                const line = document.createElement('div');
+                line.className = 'sql-line';
+                line.textContent = queryText;
+                logPanel.prepend(line);
+                logPanel.scrollTop = 0;
+            };
+
+            // Add Temp Alert Log
+            const logTempAlert = (alertText, isCritical = true) => {
+                const logPanel = document.getElementById('temp-alerts-log');
+                if (!logPanel) return;
+                const line = document.createElement('div');
+                line.className = `console-line ${isCritical ? 'danger' : 'success'}`;
+                line.textContent = `[${isCritical ? 'ALERTA TÉRMICA' : 'OK'}] ${alertText}`;
+                logPanel.prepend(line);
+                logPanel.scrollTop = 0;
+            };
+
+            // Sync gauges & sliders UI
+            const updateTemperatureUI = () => {
+                // Update fill colors & values
+                for (const truckId in trucksData) {
+                    const data = trucksData[truckId];
+                    const thermometerFill = document.getElementById(`thermometer-${truckId}`);
+                    const tempLabel = document.getElementById(`temp-val-${truckId}`);
+                    
+                    const isCritical = data.temp > tempThreshold;
+                    
+                    // Map temp to percentage (e.g. -25°C is 10%, -10°C is 95%)
+                    const pct = Math.max(10, Math.min(95, ((data.temp - (-25)) / 15) * 85 + 10));
+                    
+                    if (thermometerFill) {
+                        thermometerFill.style.height = `${pct}%`;
+                        if (isCritical) {
+                            thermometerFill.classList.add('critical');
+                        } else {
+                            thermometerFill.classList.remove('critical');
+                        }
+                    }
+
+                    if (tempLabel) {
+                        tempLabel.textContent = `${data.temp.toFixed(1)} °C`;
+                        if (isCritical) {
+                            tempLabel.className = 'small text-danger mt-1 fw-bold';
+                        } else {
+                            tempLabel.className = 'small text-white text-opacity-70 mt-1';
+                        }
+                    }
+
+                    // Update sidebar/list badge
+                    const badge = document.querySelector(`[data-truck="${truckId}"] .badge`);
+                    const sideTemp = document.getElementById(`truck-${truckId}-temp`);
+                    if (sideTemp) {
+                        sideTemp.textContent = `${data.temp.toFixed(1)} °C`;
+                        if (isCritical) {
+                            sideTemp.className = 'text-danger fw-bold';
+                        } else {
+                            sideTemp.className = '';
+                        }
+                    }
+                    if (badge) {
+                        if (isCritical) {
+                            badge.className = 'badge bg-danger rounded-pill px-2';
+                            badge.textContent = 'Alerta Temp.';
+                        } else {
+                            if (data.velocidad > 0) {
+                                badge.className = 'badge bg-success rounded-pill px-2';
+                                badge.textContent = 'En Ruta';
+                            } else {
+                                badge.className = 'badge bg-secondary rounded-pill px-2';
+                                badge.textContent = 'Detenido';
+                            }
+                        }
+                    }
+
+                    // Update map dots classes
+                    const mapDot = document.getElementById(`gps-marker-${truckId}`);
+                    if (mapDot) {
+                        if (isCritical) {
+                            mapDot.classList.add('alert-glow-dot');
+                        } else {
+                            mapDot.classList.remove('alert-glow-dot');
+                        }
+                    }
+                    
+                    const leafletDot = document.getElementById(`leaflet-dot-${truckId}`);
+                    if (leafletDot) {
+                        if (isCritical) {
+                            leafletDot.classList.add('alert-glow-dot');
+                            leafletDot.style.background = 'var(--bs-danger)';
+                            leafletDot.style.boxShadow = '0 0 10px var(--bs-danger)';
+                        } else {
+                            leafletDot.classList.remove('alert-glow-dot');
+                            if (data.velocidad > 0) {
+                                leafletDot.style.background = 'var(--bs-primary)';
+                                leafletDot.style.boxShadow = '0 0 10px var(--bs-primary)';
+                            } else {
+                                leafletDot.style.background = '#6c757d';
+                                leafletDot.style.boxShadow = '0 0 10px #6c757d';
+                            }
+                        }
+                    }
+                }
+
+                // Update Overview KPIs
+                const alertsCount = Object.values(trucksData).filter(t => t.temp > tempThreshold).length;
+                const kpiStatus = document.getElementById('kpi-temp-status');
+                const kpiBadge = document.getElementById('kpi-temp-badge');
+                if (kpiStatus) {
+                    kpiStatus.textContent = `${3 - alertsCount} OK / ${alertsCount} Alertas`;
+                }
+                if (kpiBadge) {
+                    if (alertsCount > 0) {
+                        kpiBadge.className = 'badge badge-glass bg-danger bg-opacity-25 text-danger border-danger';
+                        kpiBadge.textContent = 'Estado: Crítico';
+                    } else {
+                        kpiBadge.className = 'badge badge-glass bg-success bg-opacity-25 text-success border-success';
+                        kpiBadge.textContent = 'Estado: Estable';
+                    }
+                }
+            };
+
+            // Switch Selected Truck
+            const selectTruck = (truckId) => {
+                selectedTruckId = truckId;
+                
+                // Active class in list
+                document.querySelectorAll('.truck-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                const activeItem = document.querySelector(`[data-truck="${truckId}"]`);
+                if (activeItem) activeItem.classList.add('active');
+
+                // Update Telemetry Panel
+                const data = trucksData[truckId];
+                document.getElementById('tel-unit').textContent = data.nombre;
+                document.getElementById('tel-driver').textContent = data.conductor;
+                document.getElementById('tel-plate').textContent = data.patente;
+                document.getElementById('tel-speed').textContent = `${data.velocidad} km/h`;
+                document.getElementById('tel-lat').textContent = data.lat.toFixed(4);
+                document.getElementById('tel-lng').textContent = data.lng.toFixed(4);
+
+                // Highlight route path on Map
+                document.querySelectorAll('svg path').forEach(path => {
+                    path.setAttribute('stroke', 'rgba(255, 255, 255, 0.15)');
+                    path.setAttribute('stroke-width', '2');
+                });
+                const activePath = document.getElementById(`route-path-${truckId}`);
+                if (activePath) {
+                    activePath.setAttribute('stroke', 'var(--bs-primary)');
+                    activePath.setAttribute('stroke-width', '3');
+                }
+            };
+
+            // Simulation loop (Runs every 4s)
+            setInterval(() => {
+                const now = new Date();
+                
+                for (const id in trucksData) {
+                    const t = trucksData[id];
+                    
+                    // 1. Move vehicle along route points (GPS simulation)
+                    if (t.velocidad > 0 && t.coordsRoute.length > 1) {
+                        t.routeIndex = (t.routeIndex + 1) % t.coordsRoute.length;
+                        const pt = t.coordsRoute[t.routeIndex];
+                        t.lat = pt.lat;
+                        t.lng = pt.lng;
+                        
+                        // Update GPS marker coordinate on SVG
+                        const marker = document.getElementById(`gps-marker-${id}`);
+                        if (marker) {
+                            marker.setAttribute('cx', pt.cx);
+                            marker.setAttribute('cy', pt.cy);
+                        }
+                        
+                        // Update Leaflet Marker
+                        if (leafletMarkers && leafletMarkers[id]) {
+                            leafletMarkers[id].setLatLng([pt.lat, pt.lng]);
+                        }
+
+                        // Fluctuat speed slightly
+                        t.velocidad = Math.round(75 + Math.random() * 10);
+                        const speedVal = document.getElementById(`truck-${id}-speed`);
+                        if (speedVal) speedVal.textContent = `${t.velocidad} km/h`;
+                    }
+
+                    // 2. Fluctuate temp slightly
+                    const oldTemp = t.temp;
+                    t.temp += (Math.random() - 0.5) * 0.4;
+                    t.temp = Math.max(-23, Math.min(-12, t.temp)); // Clamp range
+                    
+                    // Trigger alert events on fluctuation transition
+                    const wasCritical = oldTemp > tempThreshold;
+                    const isCritical = t.temp > tempThreshold;
+                    if (!wasCritical && isCritical) {
+                        logTempAlert(`${t.nombre} superó el umbral crítico: ${t.temp.toFixed(1)}°C.`, true);
+                        showGlassAlert(`⚠️ Alerta Térmica: ${t.nombre} registra ${t.temp.toFixed(1)}°C`, 'danger');
+                    } else if (wasCritical && !isCritical) {
+                        logTempAlert(`${t.nombre} regresó a temperatura óptima: ${t.temp.toFixed(1)}°C.`, false);
+                        showGlassAlert(`✅ Cadena de frío restablecida para ${t.nombre}`, 'success');
+                    }
+                }
+
+                // 3. MySQL Automatic Persistence simulation
+                const selectedData = trucksData[selectedTruckId];
+                const newId = dbRecords.length > 0 ? dbRecords[0].id + 1 : 1001;
+                const tsStr = now.toISOString().replace('T', ' ').substring(0, 19);
+                const latLngStr = `${selectedData.lat.toFixed(4)}, ${selectedData.lng.toFixed(4)}`;
+                const tempStr = `${selectedData.temp.toFixed(1)}°C`;
+                
+                // Add record to simulated DB array
+                dbRecords.unshift({
+                    id: newId,
+                    timestamp: tsStr,
+                    truck: selectedTruckId,
+                    coords: latLngStr,
+                    temp: tempStr,
+                    status: 'NUEVO'
+                });
+                
+                // Cap db records size
+                if (dbRecords.length > 8) dbRecords.pop();
+
+                // Log SQL Query Statement
+                logSqlQuery(`INSERT INTO lecturas_sensor (camion_id, latitud, longitud, temperatura, fecha) VALUES ('${selectedTruckId}', ${selectedData.lat.toFixed(4)}, ${selectedData.lng.toFixed(4)}, ${selectedData.temp.toFixed(1)}, NOW());`);
+
+                // Update UI panels
+                updateTemperatureUI();
+                selectTruck(selectedTruckId);
+                renderDbTable();
+
+                // Remove highlight classes from older items after 1s
+                setTimeout(() => {
+                    dbRecords.forEach(r => {
+                        if (r.status === 'NUEVO') r.status = 'PERSISTIDO';
+                    });
+                    renderDbTable();
+                }, 1200);
+
+                // Update Overview Database Count KPI
+                const dbKpi = document.getElementById('kpi-db-records');
+                if (dbKpi) {
+                    dbKpi.textContent = (58914 + dbRecords.length - 3).toLocaleString();
+                }
+
+            }, 4000);
+
+            // --- EVENT LISTENERS ---
+
+            // Click Truck Item Selection
+            document.getElementById('gps-truck-list').addEventListener('click', (e) => {
+                const item = e.target.closest('.truck-item');
+                if (item) {
+                    const truckId = item.getAttribute('data-truck');
+                    selectTruck(truckId);
+                    showGlassAlert(`Enfocando telemetría del camión ${truckId}.`, 'primary');
+                }
+            });
+
+            // Temperature threshold slider change
+            const slider = document.getElementById('tempThresholdSlider');
+            if (slider) {
+                slider.addEventListener('input', (e) => {
+                    tempThreshold = parseFloat(e.target.value);
+                    document.getElementById('slider-val-label').textContent = `${tempThreshold.toFixed(1)} °C`;
+                    
+                    // Adjust vertical lines position dynamically
+                    const verticalPos = Math.round(95 - ((tempThreshold - (-25)) / 15) * 85);
+                    const safePos = Math.max(5, Math.min(95, verticalPos));
+                    
+                    document.getElementById('threshold-mark-1').style.bottom = `${safePos}%`;
+                    document.getElementById('threshold-mark-2').style.bottom = `${safePos}%`;
+                    document.getElementById('threshold-mark-3').style.bottom = `${safePos}%`;
+
+                    updateTemperatureUI();
+                });
+            }
+
+            // Force MySQL Manual insert button
+            const btnInsert = document.getElementById('btn-db-insert');
+            if (btnInsert) {
+                btnInsert.addEventListener('click', () => {
+                    const now = new Date();
+                    const data = trucksData[selectedTruckId];
+                    const newId = dbRecords.length > 0 ? dbRecords[0].id + 1 : 1001;
+                    const tsStr = now.toISOString().replace('T', ' ').substring(0, 19);
+                    
+                    dbRecords.unshift({
+                        id: newId,
+                        timestamp: tsStr,
+                        truck: selectedTruckId,
+                        coords: `${data.lat.toFixed(4)}, ${data.lng.toFixed(4)}`,
+                        temp: `${data.temp.toFixed(1)}°C`,
+                        status: 'NUEVO'
+                    });
+
+                    logSqlQuery(`INSERT INTO lecturas_sensor (camion_id, latitud, longitud, temperatura, fecha) VALUES ('${selectedTruckId}', ${data.lat.toFixed(4)}, ${data.lng.toFixed(4)}, ${data.temp.toFixed(1)}, NOW());`);
+                    renderDbTable();
+                    showGlassAlert(`MySQL: Registro #${newId} insertado correctamente.`, 'success');
+
+                    setTimeout(() => {
+                        dbRecords.forEach(r => {
+                            if (r.status === 'NUEVO') r.status = 'PERSISTIDO';
+                        });
+                        renderDbTable();
+                    }, 1000);
+                });
+            }
+
+            // Clear MySQL table simulation button
+            const btnClear = document.getElementById('btn-db-clear');
+            if (btnClear) {
+                btnClear.addEventListener('click', () => {
+                    dbRecords = [];
+                    renderDbTable();
+                    logSqlQuery(`TRUNCATE TABLE lecturas_sensor;`);
+                    showGlassAlert('MySQL: Tabla de base de datos vaciada (TRUNCATE).', 'warning');
+                });
+            }
+
+            // Report generation flow
+            const btnGenerateReport = document.getElementById('btn-generate-report');
+            if (btnGenerateReport) {
+                btnGenerateReport.addEventListener('click', () => {
+                    const idleState = document.getElementById('report-idle-state');
+                    const loadingState = document.getElementById('report-loading-state');
+                    const previewState = document.getElementById('report-preview-state');
+                    const progress = document.getElementById('report-progress');
+                    const loaderText = document.getElementById('report-loader-text');
+
+                    const selectedTruck = document.getElementById('report-truck').value;
+                    const selectedRange = document.getElementById('report-range').value;
+                    const selectedType = document.getElementById('report-type').value;
+
+                    // Hide idle and show loading
+                    idleState.classList.add('d-none');
+                    previewState.classList.add('d-none');
+                    loadingState.classList.remove('d-none');
+                    progress.style.width = '0%';
+
+                    // Simulated progress steps
+                    const steps = [
+                        { pct: 15, text: 'Consultando base de datos MySQL (RF-11)...' },
+                        { pct: 45, text: 'Consolidando historial de coordenadas GPS (RF-10)...' },
+                        { pct: 75, text: 'Analizando variaciones de sensores térmicos (RF-13)...' },
+                        { pct: 100, text: 'Compilando informe logístico consolidado (RF-12)...' }
+                    ];
+
+                    let stepIdx = 0;
+                    const interval = setInterval(() => {
+                        if (stepIdx < steps.length) {
+                            const step = steps[stepIdx];
+                            progress.style.width = `${step.pct}%`;
+                            loaderText.textContent = step.text;
+                            stepIdx++;
+                        } else {
+                            clearInterval(interval);
+                            
+                            // Populated report data
+                            const tData = trucksData[selectedTruck];
+                            const rangeText = selectedRange === 'today' ? 'Hoy (Últimas 24 Horas)' : (selectedRange === '7days' ? 'Últimos 7 Días' : 'Últimos 30 Días');
+                            
+                            document.getElementById('rep-title').textContent = selectedType === 'efficiency' ? 'INFORME DE EFICIENCIA DE RUTA' : (selectedType === 'thermal' ? 'INFORME DE RENDIMIENTO CADENA DE FRÍO' : 'REPORTE CONSOLIDADO OPERACIONAL');
+                            document.getElementById('rep-subtitle').textContent = `Unidad: ${tData.nombre} | Rango: ${rangeText}`;
+                            document.getElementById('rep-code').textContent = `REP-${selectedTruck}-${Math.floor(100 + Math.random() * 900)}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`;
+                            
+                            if (selectedType === 'efficiency') {
+                                document.getElementById('rep-metric-1').textContent = `${(tData.velocidad || 72).toFixed(1)} km/h`;
+                                document.getElementById('rep-metric-2').textContent = selectedRange === 'today' ? '8.4 Hrs' : (selectedRange === '7days' ? '54.2 Hrs' : '210.5 Hrs');
+                                document.getElementById('rep-metric-3').textContent = '0 Incidencias';
+                                document.getElementById('rep-metric-3').className = 'text-success';
+                                document.getElementById('rep-metric-score').textContent = '98.5%';
+                                document.getElementById('rep-chart-title').textContent = 'Eficiencia Diaria del Camión';
+                            } else if (selectedType === 'thermal') {
+                                const isCritical = tData.temp > tempThreshold;
+                                document.getElementById('rep-metric-1').textContent = `${tData.temp.toFixed(1)} °C Promedio`;
+                                document.getElementById('rep-metric-2').textContent = `Límite crítico: ${tempThreshold.toFixed(1)} °C`;
+                                document.getElementById('rep-metric-3').textContent = isCritical ? '1 Desviación Crítica' : '0 Desviaciones';
+                                document.getElementById('rep-metric-3').className = isCritical ? 'text-danger fw-bold' : 'text-success';
+                                document.getElementById('rep-metric-score').textContent = isCritical ? '82.4%' : '100.0%';
+                                document.getElementById('rep-chart-title').textContent = 'Desviación Térmica (Grados-Hora)';
+                            } else {
+                                document.getElementById('rep-metric-1').textContent = 'Consumo: 3.2 km/l';
+                                document.getElementById('rep-metric-2').textContent = selectedRange === 'today' ? '12 Actividades' : '82 Actividades';
+                                document.getElementById('rep-metric-3').textContent = 'Operación Normal';
+                                document.getElementById('rep-metric-3').className = 'text-info';
+                                document.getElementById('rep-metric-score').textContent = '94.2%';
+                                document.getElementById('rep-chart-title').textContent = 'Cumplimiento General Kpi';
+                            }
+
+                            // Show report preview
+                            loadingState.classList.add('d-none');
+                            previewState.classList.remove('d-none');
+                            showGlassAlert(`Informe compilado y renderizado.`, 'success');
+                        }
+                    }, 400);
+                });
+            }
+
+            // --- INITIALIZATION ---
+            selectTruck('H-101');
+            updateTemperatureUI();
+            renderDbTable();
+        });
+    </script>
+</body>
+
+</html>
