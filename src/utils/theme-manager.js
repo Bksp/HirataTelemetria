@@ -1,6 +1,6 @@
 export class ThemeManager {
     static init() {
-        const savedTheme = localStorage.getItem('glasskit-theme') || 'default';
+        const savedTheme = 'nature';
         this.setTheme(savedTheme);
     }
 
