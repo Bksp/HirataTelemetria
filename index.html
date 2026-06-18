@@ -1280,7 +1280,7 @@ flowchart TD
                     if (tempLabel) {
                         tempLabel.textContent = `${data.temp.toFixed(1)} °C`;
                         if (isCritical) {
-                            tempLabel.className = 'small text-danger mt-1 fw-bold';
+                            tempLabel.className = 'small text-danger mt-1';
                         } else {
                             tempLabel.className = 'small text-white text-opacity-70 mt-1';
                         }
@@ -1292,7 +1292,7 @@ flowchart TD
                     if (sideTemp) {
                         sideTemp.textContent = `${data.temp.toFixed(1)} °C`;
                         if (isCritical) {
-                            sideTemp.className = 'text-danger fw-bold';
+                            sideTemp.className = 'text-danger';
                         } else {
                             sideTemp.className = '';
                         }
