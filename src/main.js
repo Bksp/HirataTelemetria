@@ -437,6 +437,10 @@ export function initGlassKitUI() {
                       targetPage.setAttribute('data-loaded', 'true');
                       targetPage.innerHTML = '<div class="p-5 text-center text-white"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Cargando módulo...</div></div>';
                       import('./demos/store.js').then(module => module.init(targetPage)).catch(console.error);
+                  } else if (targetPageId === 'page-docs') {
+                      targetPage.setAttribute('data-loaded', 'true');
+                      targetPage.innerHTML = '<div class="p-5 text-center text-white"><div class="spinner-border text-primary" role="status"></div><div class="mt-2">Cargando módulo UML...</div></div>';
+                      import('./demos/uml.js').then(module => module.init(targetPage)).catch(console.error);
                   }
               }
           }
@@ -496,10 +500,14 @@ export function initGlassKitUI() {
       }
     }
 
-    if(document.getElementById('page-dashboard') && document.getElementById('page-dashboard').classList.contains('d-none')) return;
+    const activePage = document.querySelector('.page-view:not(.d-none)');
+    if (!activePage) return;
+
+    // Dynamically query sections to account for lazily loaded content
+    const dynamicContentSections = document.querySelectorAll('.content-section, #theme-section');
     
     let current = '';
-    contentSections.forEach(section => {
+    dynamicContentSections.forEach(section => {
       // Ignorar secciones que pertenezcan a páginas ocultas (display: none)
       if (section.offsetParent === null) return;
 
@@ -518,6 +526,9 @@ export function initGlassKitUI() {
     }
 
     navLinks.forEach(link => {
+      // Only toggle active classes for links belonging to the currently visible page
+      if (link.getAttribute('data-page') !== activePage.id) return;
+      
       link.classList.remove('active');
       if (link.getAttribute('href') === '#' + current) {
         link.classList.add('active');

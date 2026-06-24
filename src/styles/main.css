@@ -30,7 +30,7 @@ body {
 .sidebar .nav-link { 
     color: rgba(255, 255, 255, 0.65); 
     text-decoration: none; 
-    padding: 16px 24px; 
+    padding: 12px 24px; 
     display: flex;
     align-items: center;
     border-left: 4px solid transparent; 
