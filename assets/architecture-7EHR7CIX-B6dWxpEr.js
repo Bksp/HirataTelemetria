@@ -1,1 +1,0 @@
-import{f as e}from"./mermaid-parser.core-D-fmOqx7.js";import{A as m}from"./mermaid-parser.core-D-fmOqx7.js";import"./index-Vgh6ttjH.js";import"https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs";export{m as ArchitectureModule,e as createArchitectureServices};

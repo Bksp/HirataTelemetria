@@ -8,7 +8,7 @@
     <meta name="description"
         content="Dashboard estático corporativo y documentación técnica IoT de la flota de transporte Hirata.">
     <link rel="icon" type="image/svg+xml"
-        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><path d='M8.186 1.113a.5.5 0 0 0-.372 0L1.846 3.5l2.404.961L10.404 2zm3.564 1.426L5.596 5 8 5.961 14.154 3.5zm3.25 1.7-6.5 2.6v7.922l6.5-2.6V4.24zM7.5 14.762V6.838L1 4.239v7.923zM7.443.184a1.5 1.5 0 0 1 1.114 0l7.129 2.852A.5.5 0 0 1 16 3.5v8.662a1 1 0 0 1-.629.928l-7.185 2.874a.5.5 0 0 1-.372 0L.63 13.09a1 1 0 0 1-.63-.928V3.5a.5.5 0 0 1 .314-.464z'/></svg>">
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23ffffff'><path d='M0 3.5A1.5 1.5 0 0 1 1.5 2h9A1.5 1.5 0 0 1 12 3.5V5h1.02a1.5 1.5 0 0 1 1.17.563l1.481 1.85a1.5 1.5 0 0 1 .329.938V10.5a1.5 1.5 0 0 1-1.5 1.5H14a2 2 0 1 1-4 0H5a2 2 0 1 1-3.998-.085A1.5 1.5 0 0 1 0 10.5zm1.294 7.456A2 2 0 0 1 4.732 11h5.536a2 2 0 0 1 .732-.732V3.5a.5.5 0 0 0-.5-.5h-9a.5.5 0 0 0-.5.5v7a.5.5 0 0 0 .294.456M12 10a2 2 0 0 1 1.732 1h.768a.5.5 0 0 0 .5-.5V8.35a.5.5 0 0 0-.11-.312l-1.48-1.85A.5.5 0 0 0 13.02 6H12zm-9 1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2'/></svg>">
 
     <!-- Preconnect to CDNs -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
@@ -198,8 +198,8 @@
             display: block;
         }
     </style>
-  <script type="module" crossorigin src="./assets/index-Vgh6ttjH.js"></script>
-  <link rel="stylesheet" crossorigin href="./assets/index-CeXgFkCI.css">
+  <script type="module" crossorigin src="./assets/index-Dk6cB5gA.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DYzN2QD1.css">
 </head>
 
 <body>
@@ -230,6 +230,30 @@
             <div class="pt-3 flex-grow-1">
                 <div class="px-3">
                     <div class="sidebar-group-title text-white text-opacity-50 small fw-bold px-2 mb-2"
+                        style="font-size: 0.72rem;">ARQUITECTURA UML</div>
+
+                    <a href="#docs-section" class="nav-link" data-page="page-docs">
+                        <i class="bi bi-info-circle me-3"></i> <span>Introducción</span>
+                    </a>
+                    <a href="#uml-clases" class="nav-link" data-page="page-docs">
+                        <i class="bi bi-diagram-3-fill me-3"></i> <span>Diagrama de Clases</span>
+                    </a>
+                    <a href="#uml-arquitectura" class="nav-link" data-page="page-docs">
+                        <i class="bi bi-cpu-fill me-3"></i> <span>Arquitectura Alto Nivel</span>
+                    </a>
+                    <a href="#uml-actividades" class="nav-link" data-page="page-docs">
+                        <i class="bi bi-gear-fill me-3"></i> <span>Flujo de Operaciones</span>
+                    </a>
+                    <a href="#uml-secuencia" class="nav-link" data-page="page-docs">
+                        <i class="bi bi-arrow-left-right me-3"></i> <span>Secuencia IoT</span>
+                    </a>
+                    <a href="#uml-casos" class="nav-link" data-page="page-docs">
+                        <i class="bi bi-people-fill me-3"></i> <span>Casos de Uso</span>
+                    </a>
+
+                    <div class="my-3 border-top border-light border-opacity-25"></div>
+
+                    <div class="sidebar-group-title text-white text-opacity-50 small fw-bold px-2 mb-2"
                         style="font-size: 0.72rem;">CORE DASHBOARD</div>
 
                     <a href="#overview-section" class="nav-link active" data-page="page-dashboard">
@@ -246,14 +270,6 @@
                     </a>
                     <a href="#reports-section" class="nav-link" data-page="page-dashboard">
                         <i class="bi bi-file-earmark-bar-graph me-3"></i> <span>Reportes (RF-12)</span>
-                    </a>
-
-                    <div class="my-3 border-top border-light border-opacity-25"></div>
-                    <div class="sidebar-group-title text-white text-opacity-50 small fw-bold px-2 mb-2"
-                        style="font-size: 0.72rem;">ARQUITECTURA UML</div>
-
-                    <a href="#docs-section" class="nav-link" data-page="page-docs">
-                        <i class="bi bi-journal-code me-3"></i> <span>Documentación UML</span>
                     </a>
 
                     <!-- <div class="my-3 border-top border-light border-opacity-25"></div>
@@ -281,7 +297,7 @@
             <gk-navbar id="main-navbar" title="Hirata">
                 <div slot="actions"
                     class="badge badge-glass bg-primary bg-opacity-25 text-primary border-primary border-opacity-50 me-3 d-none d-lg-block">
-                    PROTOTIPO V2.0
+                    PROTOTIPO V2.2
                 </div>
                 <div slot="actions"
                     class="rounded-circle border border-primary border-opacity-50 bg-primary bg-opacity-25 text-primary d-none d-lg-flex justify-content-center align-items-center"
@@ -540,18 +556,28 @@
                         <div class="row g-4">
                             <!-- Left: Thermometers & Alert Indicator -->
                             <div class="col-lg-6">
-                                <div class="glass-card p-4 h-100">
+                                <div class="glass-card p-4 h-100 d-flex flex-column">
                                     <h5 class="h6 fw-bold mb-4"><i
                                             class="bi bi-eye-fill me-2 text-danger"></i>Termómetros Flotantes</h5>
 
-                                    <div class="row text-center mt-2">
+                                    <div class="row text-center my-auto">
                                         <!-- H-101 -->
                                         <div class="col-4">
-                                            <div class="thermometer-visual">
-                                                <div class="thermometer-threshold-line" style="bottom: 40px;"
-                                                    id="threshold-mark-1"></div>
-                                                <div class="thermometer-fill" style="height: 60%;"
-                                                    id="thermometer-H-101"></div>
+                                            <div class="d-flex justify-content-center">
+                                                <div class="position-relative">
+                                                    <div class="position-absolute text-white text-opacity-50 fw-bold"
+                                                        style="top: 5%; right: 100%; margin-right: 6px; font-size: 0.7rem;">
+                                                        -10°</div>
+                                                    <div class="position-absolute text-white text-opacity-50 fw-bold"
+                                                        style="bottom: 5%; right: 100%; margin-right: 6px; font-size: 0.7rem;">
+                                                        -25°</div>
+                                                    <div class="thermometer-visual mx-0">
+                                                        <div class="thermometer-threshold-line" style="bottom: 66%;"
+                                                            id="threshold-mark-1"></div>
+                                                        <div class="thermometer-fill" style="height: 60%;"
+                                                            id="thermometer-H-101"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="mt-3 fw-bold small text-white">H-101</div>
                                             <div class="small text-white text-opacity-70 mt-1" id="temp-val-H-101">-17.8
@@ -559,11 +585,21 @@
                                         </div>
                                         <!-- H-102 -->
                                         <div class="col-4">
-                                            <div class="thermometer-visual">
-                                                <div class="thermometer-threshold-line" style="bottom: 40px;"
-                                                    id="threshold-mark-2"></div>
-                                                <div class="thermometer-fill critical" style="height: 85%;"
-                                                    id="thermometer-H-102"></div>
+                                            <div class="d-flex justify-content-center">
+                                                <div class="position-relative">
+                                                    <div class="position-absolute text-white text-opacity-50 fw-bold"
+                                                        style="top: 5%; right: 100%; margin-right: 6px; font-size: 0.7rem;">
+                                                        -10°</div>
+                                                    <div class="position-absolute text-white text-opacity-50 fw-bold"
+                                                        style="bottom: 5%; right: 100%; margin-right: 6px; font-size: 0.7rem;">
+                                                        -25°</div>
+                                                    <div class="thermometer-visual mx-0">
+                                                        <div class="thermometer-threshold-line" style="bottom: 66%;"
+                                                            id="threshold-mark-2"></div>
+                                                        <div class="thermometer-fill critical" style="height: 85%;"
+                                                            id="thermometer-H-102"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="mt-3 fw-bold small text-white">H-102</div>
                                             <div class="small text-danger mt-1 fw-bold" id="temp-val-H-102">-14.1 °C
@@ -571,11 +607,21 @@
                                         </div>
                                         <!-- H-103 -->
                                         <div class="col-4">
-                                            <div class="thermometer-visual">
-                                                <div class="thermometer-threshold-line" style="bottom: 40px;"
-                                                    id="threshold-mark-3"></div>
-                                                <div class="thermometer-fill" style="height: 52%;"
-                                                    id="thermometer-H-103"></div>
+                                            <div class="d-flex justify-content-center">
+                                                <div class="position-relative">
+                                                    <div class="position-absolute text-white text-opacity-50 fw-bold"
+                                                        style="top: 5%; right: 100%; margin-right: 6px; font-size: 0.7rem;">
+                                                        -10°</div>
+                                                    <div class="position-absolute text-white text-opacity-50 fw-bold"
+                                                        style="bottom: 5%; right: 100%; margin-right: 6px; font-size: 0.7rem;">
+                                                        -25°</div>
+                                                    <div class="thermometer-visual mx-0">
+                                                        <div class="thermometer-threshold-line" style="bottom: 66%;"
+                                                            id="threshold-mark-3"></div>
+                                                        <div class="thermometer-fill" style="height: 52%;"
+                                                            id="thermometer-H-103"></div>
+                                                    </div>
+                                                </div>
                                             </div>
                                             <div class="mt-3 fw-bold small text-white">H-103</div>
                                             <div class="small text-white text-opacity-70 mt-1" id="temp-val-H-103">-19.0
@@ -590,9 +636,23 @@
                                 <div class="glass-card p-4 h-100 d-flex flex-column">
                                     <h5 class="h6 fw-bold mb-3"><i class="bi bi-sliders me-2 text-danger"></i>Ajustar
                                         Límite Crítico de Temperatura</h5>
-                                    <p class="text-white text-opacity-50 small mb-4">La carga refrigerada requiere
-                                        condiciones de congelado estricto. Si la lectura supera este valor, se disparará
-                                        una alerta inmediata en el panel.</p>
+                                    <p class="text-white text-opacity-50 small mb-4">El gráfico de termómetros flotantes
+                                        ilustra en tiempo real el estado térmico de cada unidad de la cadena de frío.
+                                        Para esta demostración de la herramienta, puedes ajustar de forma independiente
+                                        el umbral de alerta de cada camión; si la fluctuación térmica simulada excede
+                                        este límite, el termómetro entrará en estado crítico y el sistema disparará
+                                        automáticamente una notificación visual y un registro de incidentes.</p>
+
+                                    <!-- Truck Selector for Temperature -->
+                                    <div class="mb-3">
+                                        <label class="form-label text-white text-opacity-75 small mb-1">Seleccionar
+                                            Camión a Configurar:</label>
+                                        <select class="form-select form-select-sm" id="tempTruckSelector">
+                                            <option value="H-101">Camión H-101</option>
+                                            <option value="H-102">Camión H-102</option>
+                                            <option value="H-103">Camión H-103</option>
+                                        </select>
+                                    </div>
 
                                     <!-- Temperature Slider -->
                                     <div class="mb-4">
@@ -600,7 +660,8 @@
                                             <label for="tempThresholdSlider"
                                                 class="form-label text-white text-opacity-75 m-0">Umbral de
                                                 Alerta:</label>
-                                            <span class="badge badge-glass bg-success bg-opacity-25 text-success border-success border-opacity-50"
+                                            <span
+                                                class="badge badge-glass bg-success bg-opacity-25 text-success border-success border-opacity-50"
                                                 id="slider-val-label">-15.0 °C</span>
                                         </div>
                                         <input type="range" class="form-range" min="-25" max="-10" step="0.5"
@@ -919,142 +980,8 @@
 
                 <!-- VIEW 2: TECHNICAL DOCUMENTATION (Mermaid) -->
                 <div id="page-docs" class="page-view d-none">
-
-                    <section id="docs-section" class="content-section mb-5 pt-4">
-                        <div class="glass-card p-5 mb-4">
-                            <h1 class="display-6 fw-bold text-white mb-2"><i
-                                    class="bi bi-journal-code text-primary me-2"></i>Documentación Técnica del Sistema
-                            </h1>
-                            <p class="lead text-white text-opacity-75 m-0">
-                                Modelamiento estructural y flujo de arquitectura IoT diseñado específicamente para la
-                                cadena de distribución Hirata.
-                            </p>
-                            <p class="text-white text-opacity-50 small mt-2">
-                                <i class="bi bi-info-circle me-1"></i> Tip: Haz clic en cualquiera de los diagramas para
-                                abrir el visor interactivo con soporte de zoom y arrastre.
-                            </p>
-                        </div>
-
-                        <!-- Class Diagram Card -->
-                        <div class="glass-card p-4 mb-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h4 class="h5 fw-bold text-white m-0"><i
-                                        class="bi bi-diagram-3-fill text-primary me-2"></i>1. Diagrama de Clases UML
-                                </h4>
-                                <span
-                                    class="badge badge-glass bg-primary bg-opacity-25 text-primary border-primary border-opacity-50">Modelo
-                                    de Dominio</span>
-                            </div>
-                            <p class="text-white text-opacity-70 small mb-4">
-                                Estructura de clases del sistema que integra la jerarquía de sensores (RF-10, RF-13), el
-                                modelo de datos (RF-11) y la generación de reportes (RF-12).
-                            </p>
-
-                            <div class="d-flex justify-content-center">
-                                <pre class="mermaid" id="mermaid-class-diagram">
-classDiagram
-    class Camion {
-        +String patente
-        +String modelo
-        +int kilometraje
-        +asignarRuta()
-        +registrarMantenimiento()
-    }
-    class Sensor {
-        &lt;&lt;Abstract&gt;&gt;
-        +String idSensor
-        +String estado
-        +capturarDato()
-    }
-    class SensorGPS {
-        +float latitud
-        +float longitud
-        +obtenerUbicacion()
-    }
-    class SensorTemperatura {
-        +float temperaturaActual
-        +float limiteCritico
-        +verificarAlerta()
-    }
-    class Ruta {
-        +String origen
-        +String destino
-        +float tiempoEstimado
-    }
-    class BaseDeDatosMySQL {
-        +guardarDatoSensor()
-        +consultarHistorial()
-    }
-    class Reporte {
-        +Date fechaEmision
-        +generarInformeRutas()
-        +generarInformeRendimiento()
-    }
-    class Usuario {
-        +String rol
-        +visualizarDashboard()
-    }
-
-    Camion "1" -- "1..*" Sensor : posee
-    Sensor &lt;|-- SensorGPS
-    Sensor &lt;|-- SensorTemperatura
-    Camion "1" -- "1" Ruta : realiza
-    Sensor "1..*" -- "1" BaseDeDatosMySQL : envía datos a
-    BaseDeDatosMySQL "1" -- "1..*" Reporte : provee datos para
-    Usuario "1" -- "1..*" Reporte : solicita
-                                </pre>
-                            </div>
-                        </div>
-
-                        <!-- Architecture Diagram Card -->
-                        <div class="glass-card p-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-cpu-fill text-info me-2"></i>2.
-                                    Diagrama de Arquitectura de Alto Nivel</h4>
-                                <span
-                                    class="badge badge-glass bg-info bg-opacity-25 text-info border-info border-opacity-50">Flujo
-                                    IoT</span>
-                            </div>
-                            <p class="text-white text-opacity-70 small mb-4">
-                                Canalización de datos de extremo a extremo, desde la captura telemétrica de hardware
-                                móvil hasta la capa de persistencia y portal de presentación.
-                            </p>
-
-                            <div class="d-flex justify-content-center">
-                                <pre class="mermaid" id="mermaid-architecture-diagram">
-flowchart TD
-    subgraph "Capa de Dispositivos (Camiones Hirata)"
-        GPS[Sensor GPS RF-10]
-        Temp[Sensor Temperatura RF-13]
-    end
-
-    subgraph "Capa de Conectividad"
-        Red[Red Móvil / Internet]
-    end
-
-    subgraph "Capa de Procesamiento y Persistencia (RF-11)"
-        API[API de Recepción de Datos]
-        DB[(Base de Datos MySQL)]
-    end
-
-    subgraph "Capa de Aplicación y Presentación (GlassKit)"
-        Dash[Dashboard Personal Logística]
-        Rep[Módulo de Reportes RF-12]
-        Alertas[Sistema de Alertas]
-    end
-
-    GPS -->|Datos de Ubicación| Red
-    Temp -->|Datos de Temperatura| Red
-    Red --> API
-    API --> DB
-    DB --> Dash
-    DB --> Rep
-    DB --> Alertas
-                                </pre>
-                            </div>
-                        </div>
-                    </section>
                 </div>
+
             </div>
         </main>
     </div>
@@ -1154,7 +1081,11 @@ flowchart TD
             };
 
             let selectedTruckId = 'H-101';
-            let tempThreshold = -15.0;
+            let tempThresholds = {
+                'H-101': -15.0,
+                'H-102': -15.0,
+                'H-103': -15.0
+            };
 
             const initLeafletMap = () => {
                 if (!leafletMap) return;
@@ -1218,10 +1149,10 @@ flowchart TD
                             <td>${rec.timestamp}</td>
                             <td><span class="badge bg-secondary">${rec.truck}</span></td>
                             <td class="font-monospace">${rec.coords}</td>
-                            <td class="${parseFloat(rec.temp) > tempThreshold ? 'text-danger fw-bold' : ''}">${rec.temp}</td>
+                            <td class="${parseFloat(rec.temp) > tempThresholds[rec.truck] ? 'text-danger fw-bold' : ''}">${rec.temp}</td>
                             <td class="text-end">
-                                <span class="badge bg-opacity-25 ${parseFloat(rec.temp) > tempThreshold ? 'bg-danger text-danger border-danger' : 'bg-success text-success border-success'} border">
-                                    ${parseFloat(rec.temp) > tempThreshold ? 'ALERTA' : 'PERSISTIDO'}
+                                <span class="badge bg-opacity-25 ${parseFloat(rec.temp) > tempThresholds[rec.truck] ? 'bg-danger text-danger border-danger' : 'bg-success text-success border-success'} border">
+                                    ${parseFloat(rec.temp) > tempThresholds[rec.truck] ? 'ALERTA' : 'PERSISTIDO'}
                                 </span>
                             </td>
                         </tr>
@@ -1259,7 +1190,7 @@ flowchart TD
                     const thermometerFill = document.getElementById(`thermometer-${truckId}`);
                     const tempLabel = document.getElementById(`temp-val-${truckId}`);
 
-                    const isCritical = data.temp > tempThreshold;
+                    const isCritical = data.temp > tempThresholds[truckId];
 
                     // Map temp to percentage (e.g. -25°C is 10%, -10°C is 95%)
                     const pct = Math.max(10, Math.min(95, ((data.temp - (-25)) / 15) * 85 + 10));
@@ -1276,7 +1207,7 @@ flowchart TD
                     if (tempLabel) {
                         tempLabel.textContent = `${data.temp.toFixed(1)} °C`;
                         if (isCritical) {
-                            tempLabel.className = 'small text-danger mt-1';
+                            tempLabel.className = 'small text-danger mt-1 fw-bold';
                         } else {
                             tempLabel.className = 'small text-white text-opacity-70 mt-1';
                         }
@@ -1338,7 +1269,7 @@ flowchart TD
                 }
 
                 // Update Overview KPIs
-                const alertsCount = Object.values(trucksData).filter(t => t.temp > tempThreshold).length;
+                const alertsCount = Object.entries(trucksData).filter(([id, t]) => t.temp > tempThresholds[id]).length;
                 const kpiStatus = document.getElementById('kpi-temp-status');
                 const kpiBadge = document.getElementById('kpi-temp-badge');
                 if (kpiStatus) {
@@ -1420,19 +1351,19 @@ flowchart TD
                     }
 
                     // 2. Fluctuate temp slightly
-                    const oldTemp = t.temp;
                     t.temp += (Math.random() - 0.5) * 0.4;
                     t.temp = Math.max(-23, Math.min(-12, t.temp)); // Clamp range
 
                     // Trigger alert events on fluctuation transition
-                    const wasCritical = oldTemp > tempThreshold;
-                    const isCritical = t.temp > tempThreshold;
-                    if (!wasCritical && isCritical) {
+                    const isCritical = t.temp > tempThresholds[id];
+                    if (!t.isCriticalState && isCritical) {
                         logTempAlert(`${t.nombre} superó el umbral crítico: ${t.temp.toFixed(1)}°C.`, true);
-                        showGlassAlert(`⚠️ Alerta Térmica: ${t.nombre} registra ${t.temp.toFixed(1)}°C`, 'danger');
-                    } else if (wasCritical && !isCritical) {
+                        showGlassAlert(`Alerta Térmica: ${t.nombre} registra ${t.temp.toFixed(1)}°C`, 'danger');
+                        t.isCriticalState = true;
+                    } else if (t.isCriticalState && !isCritical) {
                         logTempAlert(`${t.nombre} regresó a temperatura óptima: ${t.temp.toFixed(1)}°C.`, false);
-                        showGlassAlert(`✅ Cadena de frío restablecida para ${t.nombre}`, 'success');
+                        showGlassAlert(`Cadena de frío restablecida para ${t.nombre}`, 'success');
+                        t.isCriticalState = false;
                     }
                 }
 
@@ -1494,19 +1425,33 @@ flowchart TD
 
             // Temperature threshold slider change
             const slider = document.getElementById('tempThresholdSlider');
-            if (slider) {
-                slider.addEventListener('input', (e) => {
-                    tempThreshold = parseFloat(e.target.value);
-                    document.getElementById('slider-val-label').textContent = `${tempThreshold.toFixed(1)} °C`;
+            const tempTruckSelector = document.getElementById('tempTruckSelector');
 
-                    // Adjust vertical lines position dynamically
-                    const verticalPos = Math.round(95 - ((tempThreshold - (-25)) / 15) * 85);
+            function updateThresholdMarks() {
+                const ids = { 'H-101': '1', 'H-102': '2', 'H-103': '3' };
+                for (let t in tempThresholds) {
+                    const tempTh = tempThresholds[t];
+                    const verticalPos = Math.round(((tempTh - (-25)) / 15) * 85 + 10);
                     const safePos = Math.max(5, Math.min(95, verticalPos));
+                    const markElement = document.getElementById(`threshold-mark-${ids[t]}`);
+                    if (markElement) markElement.style.bottom = `${safePos}%`;
+                }
+            }
 
-                    document.getElementById('threshold-mark-1').style.bottom = `${safePos}%`;
-                    document.getElementById('threshold-mark-2').style.bottom = `${safePos}%`;
-                    document.getElementById('threshold-mark-3').style.bottom = `${safePos}%`;
+            if (slider && tempTruckSelector) {
+                tempTruckSelector.addEventListener('change', (e) => {
+                    const selectedTempTruck = e.target.value;
+                    const val = tempThresholds[selectedTempTruck];
+                    slider.value = val;
+                    document.getElementById('slider-val-label').textContent = `${val.toFixed(1)} °C`;
+                });
 
+                slider.addEventListener('input', (e) => {
+                    const selectedTempTruck = tempTruckSelector.value;
+                    tempThresholds[selectedTempTruck] = parseFloat(e.target.value);
+                    document.getElementById('slider-val-label').textContent = `${tempThresholds[selectedTempTruck].toFixed(1)} °C`;
+
+                    updateThresholdMarks();
                     updateTemperatureUI();
                 });
             }
@@ -1607,9 +1552,9 @@ flowchart TD
                                 document.getElementById('rep-metric-score').textContent = '98.5%';
                                 document.getElementById('rep-chart-title').textContent = 'Eficiencia Diaria del Camión';
                             } else if (selectedType === 'thermal') {
-                                const isCritical = tData.temp > tempThreshold;
+                                const isCritical = tData.temp > tempThresholds[selectedTruck];
                                 document.getElementById('rep-metric-1').textContent = `${tData.temp.toFixed(1)} °C Promedio`;
-                                document.getElementById('rep-metric-2').textContent = `Límite crítico: ${tempThreshold.toFixed(1)} °C`;
+                                document.getElementById('rep-metric-2').textContent = `Límite crítico: ${tempThresholds[selectedTruck].toFixed(1)} °C`;
                                 document.getElementById('rep-metric-3').textContent = isCritical ? '1 Desviación Crítica' : '0 Desviaciones';
                                 document.getElementById('rep-metric-3').className = isCritical ? 'text-danger fw-bold' : 'text-success';
                                 document.getElementById('rep-metric-score').textContent = isCritical ? '82.4%' : '100.0%';
