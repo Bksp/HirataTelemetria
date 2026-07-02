@@ -28,90 +28,7 @@
         </p>
 
         <div class="d-flex justify-content-center">
-            <pre class="mermaid" id="mermaid-class-diagram">
----
-title: "DIAGRAMA DE CLASES : SISTEMA DE MONITOREO HIRATA"
----
-classDiagram
-
-    class PersonalLogistica["Personal Logistica"] {
-        -idPersonal : int
-        -nombre : String
-        -rol : String
-        -email : String
-        +consultarFlota() List~Camion~
-        +generarReporte(filtros)  Reporte
-    }
-
-    class Camion {
-        -idCamion : String
-        -patente : String
-        -modelo : String
-        -conductor : String
-        -rutaActual : String
-        -velocidad : double
-        +actualizarPosicion(lat, lng)
-        +obtenerEstado() String
-    }
-
-    class SensorGPS["Sensor GPS"] {
-        -idSensor : String
-        -latitud : double
-        -longitud : double
-        -estado : String
-        -timestamp : Date
-        +leerCoordenadas() GPSData
-        +enviarDatos() boolean
-    }
-
-    class Ruta {
-        -idRuta : String
-        -origen : String
-        -destino : String
-        -horaInicio : Date
-        -horaFin : Date
-        -distancia : double
-        +calcularTiempo() double
-        +finalizarRuta()
-    }
-
-    class RegistroSensor["Registro Sensor"] {
-        -idRegistro : int
-        -camionId : String
-        -latitud : double
-        -longitud : double
-        -temperatura : double
-        -fechaHora : Date
-        +guardarRegistro()  boolean
-    }
-
-    class AlertaTemperatura["Alerta Temperatura"] {
-        -idAlerta : int
-        -camionId : String
-        -tempActual : double
-        -tempUmbral : double
-        -severidad : String
-        -fecha : Date
-        +generarAlerta() Alerta
-        +enviarNotificacion() boolean
-    }
-
-    class Reporte {
-        -int idReporte
-        -tipo : String
-        -fechaGeneracion : Date
-        -formato : String
-        +generarPDF() File
-        +exportarCSV() File
-    }
-
-    PersonalLogistica "1" --> "0..*" Camion : monitorea
-    Camion "1" --> "1..*" SensorGPS : posee
-    Camion "1" --> "1..*" Ruta : registra
-    Camion "1" --> "0..*" RegistroSensor : genera
-    Camion "1" --> "0..*" AlertaTemperatura : dispara
-    PersonalLogistica "1" --> "0..*" Reporte : solicita
-            </pre>
+            <img src="./img/DiagramaClases.png" alt="Diagrama de Clases" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
         </div>
     </div>
 </section>
@@ -170,50 +87,7 @@ classDiagram
         </div>
 
         <div class="d-flex justify-content-center">
-            <pre class="mermaid" id="mermaid-architecture-diagram">
-flowchart TD
-    %% Capa 1: Sensores (Hardware Básico)
-    subgraph Capa1 ["1. Capa de Dispositivos (Camiones Hirata)"]
-        GPS[Sensor GPS RF-10]
-        Temp[Sensor Temperatura RF-13]
-    end
-
-    %% Capa 2: Procesamiento en el Borde (Nueva)
-    subgraph Capa2 ["2. Capa de Procesamiento Local (Edge)"]
-        Comp[Computadora a Bordo del Sistema]
-    end
-
-    %% Capa 3: Conectividad
-    subgraph Capa3 ["3. Capa de Conectividad"]
-        Red[Red Móvil / Internet]
-    end
-
-    %% Capa 4: Backend
-    subgraph Capa4 ["4. Capa de Procesamiento y Persistencia (Backend - RF-11)"]
-        API[API de Recepción de Datos]
-        DB[(Base de Datos MySQL)]
-    end
-
-    %% Capa 5: Frontend
-    subgraph Capa5 ["5. Capa de Aplicación y Presentación (Frontend - GlassKit)"]
-        Dash[Dashboard Personal Logística]
-        Rep[Módulo de Reportes RF-12]
-        Alertas[Sistema de Alertas]
-    end
-
-    %% Relaciones y Flujo de Datos
-    GPS -->|Coordenadas| Comp
-    Temp -->|Lectura Térmica| Comp
-    
-    Comp -->|Paquetes JSON unificados| Red
-    
-    Red --> API
-    API -->|Validación e Inserción| DB
-    
-    DB --> Dash
-    DB --> Rep
-    DB --> Alertas
-            </pre>
+            <img src="./img/DiagramaAltoNivel.png" alt="Diagrama de Arquitectura de Alto Nivel" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
         </div>
     </div>
 </section>
@@ -229,29 +103,13 @@ flowchart TD
             Flujo de eventos y acciones del sistema, desde la lectura de los sensores hasta el procesamiento y la generación de reportes.
         </p>
 
-        <div class="d-flex justify-content-center">
-            <pre class="mermaid" id="mermaid-activities-diagram">
-graph TD
-    A[Inicio: Sistema en operación] --> B[Leer sensores: GPS + Temp]
-    B --> C[Empaquetar datos en JSON]
-    C --> D[Enviar al Servidor IoT]
-    D --> E[Validar datos recibidos]
-    E --> F[<b>RF-11:</b> Guardar en BD MySQL]
-    F --> G[<b>RF-10:</b> Actualizar Dashboard]
-    G --> H{<b>RF-13:</b> ¿Temp > Umbral?}
-    H -->|No| I[Mostrar estado OK]
-    H -->|Sí| J[Disparar alerta roja]
-    J --> K[Notificar al personal]
-    I --> L[Esperar intervalo 5s]
-    K --> L
-    L --> B
-
-    N[Personal solicita reporte] --> O[Seleccionar camión y fecha]
-    O --> P[<b>RF-12:</b> Consultar BD histórica]
-    P --> Q[Calcular métricas: velocidad, tiempo]
-    Q --> R[<b>RF-12:</b> Generar PDF/CSV]
-    R --> S[Entregar al usuario]
-            </pre>
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 d-flex justify-content-center">
+                <img src="./img/DiagramaActividades1.png" alt="Diagrama de Actividades 1" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+            </div>
+            <div class="col-md-6 d-flex justify-content-center">
+                <img src="./img/DiagramaActividades2.png" alt="Diagrama de Actividades 2" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+            </div>
         </div>
     </div>
 </section>
@@ -268,45 +126,7 @@ graph TD
         </p>
 
         <div class="d-flex justify-content-center">
-            <pre class="mermaid" id="mermaid-sequence-diagram">
-sequenceDiagram
-    participant User as Personal Logística
-    participant IoT as Sistema IoT
-    participant GPS as Sensor GPS
-    participant Temp as Sensor Temp
-    participant Server as Servidor IoT
-    participant DB as Base de Datos
-    participant Dash as Dashboard
-    participant Alertas as Alertas
-    participant Reportes as Reportes
-
-    loop Ciclo continuo (cada 5 seg)
-        IoT->>GPS: Leer coordenadas
-        IoT->>Temp: Leer temperatura
-        GPS-->>IoT: lat/lng
-        Temp-->>IoT: °C
-        IoT->>Server: Enviar telemetría
-
-        Server->>DB: [RF-11] Guardar registro
-        Server->>Dash: [RF-10] Actualizar mapa
-
-        Server->>Server: Evaluar umbral
-        alt Temperatura > Límite
-            Server->>Alertas: [RF-13] Generar alerta
-            Alertas->>Dash: Mostrar notificación
-            Dash->>User: Alertar al personal
-        else Temperatura OK
-            Dash->>User: Mostrar estado normal
-        end
-    end
-
-    User->>Dash: [RF-12] Solicitar reporte
-    Dash->>Reportes: Enviar filtros
-    Reportes->>DB: Consultar históricos
-    DB-->>Reportes: Devolver datos
-    Reportes-->>Dash: Generar informe
-    Dash-->>User: Entregar PDF/CSV
-            </pre>
+            <img src="./img/DiagramaSecuencia.png" alt="Diagrama de Secuencia" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
         </div>
     </div>
 </section>
@@ -319,59 +139,12 @@ sequenceDiagram
             <span class="badge badge-glass bg-danger bg-opacity-25 text-danger border-danger border-opacity-50">Actores y Funciones</span>
         </div>
         <p class="text-white text-opacity-70 small mb-4">
-            Interacción entre los usuarios (Administrador y Operador) y las funcionalidades clave del sistema. 
-            <br><small class="text-white-50"><i>Nota: Se adjunta la imagen de referencia del curso además del código fuente Mermaid.</i></small>
+            Interacción entre los usuarios (Administrador y Operador) y las funcionalidades clave del sistema.
         </p>
 
-        <!-- Mermaid Source (Rendered) -->
-        <div class="d-flex justify-content-center mb-4">
-            <pre class="mermaid" id="mermaid-usecases-diagram">
----
-title: "CASO DE USO : SISTEMA DE MONITOREO HIRATA"
----
-flowchart LR
-    %% Actores
-    Administrador("👤 ADMINISTRADOR")
-    Operador("👤 OPERADOR")
-
-    %% Límite del Sistema
-    subgraph Sistema ["SISTEMA DE MONITOREO HIRATA"]
-        direction TB
-        UC1(["RF-11\nALMACENAR DATOS DE\nSENSORES"])
-        UC2(["CONFIGURAR\nUMBRAL\nTERMICO"])
-        UC3(["AUDITAR PERSISTENCIA\nEN LA BASE DE DATOS"])
-        UC4(["RF-12\nGENERAR REPORTES"])
-        UC5(["FILTRAR REPORTE POR\nFECHA"])
-        UC6(["EXPORTAR INFORME"])
-        UC7(["RF-13\nCONTROLAR\nTEMPERATURA\nDE\nCARGA"])
-        UC8(["RECIBIR ALERTAS DE\nTEMPERATURA"])
-        UC9(["RF-10\nMONITOREAR GPS EN\nTIEMPO REAL"])
-        UC10(["VER UBICACION Y\nVELOCIDAD EN EL MAPA"])
-    end
-
-    %% Relaciones Actores - Casos de Uso (Líneas sólidas)
-    Administrador --- UC1
-    Administrador --- UC2
-    Administrador --- UC3
-    Administrador --- UC4
-
-    Operador --- UC7
-    Operador --- UC9
-
-    %% Relaciones entre Casos de Uso (Líneas punteadas Include/Extend)
-    UC2 -. "&lt;&lt;EXTEND&gt;&gt;" .-> UC1
-    UC1 -.-> UC3
-    UC2 -. "&lt;&lt;EXTEND&gt;&gt;" .-> UC7
-    UC4 -. "&lt;&lt;INCLUDE&gt;&gt;" .-> UC5
-    UC4 -. "&lt;&lt;INCLUDE&gt;&gt;" .-> UC6
-    UC7 -. "&lt;&lt;INCLUDE&gt;&gt;" .-> UC8
-    UC9 -. "&lt;&lt;INCLUDE&gt;&gt;" .-> UC10
-            </pre>
-        </div>
-
         <!-- Use Case Image -->
-        <div class="d-flex justify-content-center border-top border-light border-opacity-10 pt-4 mt-2">
-            <img src="https://raw.githubusercontent.com/Bksp/HirataTelemetria/refs/heads/main/src/demos/img/CasosDeUso.png" alt="Diagrama de Casos de Uso" class="img-fluid rounded-3 border border-light border-opacity-10 shadow-lg" style="max-height: 500px; object-fit: contain;">
+        <div class="d-flex justify-content-center mb-4">
+            <img src="./img/CasosDeUso.png" alt="Diagrama de Casos de Uso" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
         </div>
     </div>
 </section>
