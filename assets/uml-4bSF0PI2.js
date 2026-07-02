@@ -1,0 +1,150 @@
+const a=`<section id="docs-section" class="content-section mb-5 pt-4">
+    <div class="glass-card p-5 mb-4">
+        <h1 class="display-6 fw-bold text-white mb-2"><i class="bi bi-journal-code text-primary me-2"></i>Documentación Técnica del Sistema
+        </h1>
+        <p class="lead text-white text-opacity-75 m-0">
+            Modelamiento estructural y flujo de arquitectura IoT para la cadena de distribución Hirata. El diseño integral del proyecto se detalla mediante cinco diagramas: Clases, Casos de Uso, Actividades, Arquitectura y Secuencia.
+        </p>
+        <p class="text-white text-opacity-50 small mt-2">
+            <i class="bi bi-info-circle me-1"></i> Tip: Haz clic en cualquier diagrama para abrir el visor interactivo con soporte de zoom y arrastre.
+        </p>
+    </div>
+</section>
+
+<!-- Class Diagram Card -->
+<section id="uml-clases" class="content-section mb-4">
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-diagram-3-fill text-primary me-2"></i>1. Diagrama de
+                Clases UML
+            </h4>
+            <span
+                class="badge badge-glass bg-primary bg-opacity-25 text-primary border-primary border-opacity-50">Modelo
+                de Dominio</span>
+        </div>
+        <p class="text-white text-opacity-70 small mb-4">
+            Estructura de clases del sistema que integra la jerarquía de sensores (RF-10, RF-13), el
+            modelo de datos (RF-11) y la generación de reportes (RF-12).
+        </p>
+
+        <div class="d-flex justify-content-center">
+            <img src="https://raw.githubusercontent.com/Bksp/HirataTelemetria/main/src/demos/img/DiagramaClases.png" alt="Diagrama de Clases" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+        </div>
+    </div>
+</section>
+
+<!-- Architecture Diagram Card -->
+<section id="uml-arquitectura" class="content-section mb-4">
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-cpu-fill text-info me-2"></i>2.
+                Diagrama de Arquitectura de Alto Nivel</h4>
+            <span class="badge badge-glass bg-info bg-opacity-25 text-info border-info border-opacity-50">Flujo
+                IoT</span>
+        </div>
+        <p class="text-white text-opacity-70 small mb-4">
+            Canalización de datos de extremo a extremo, desde la captura telemétrica de hardware
+            móvil hasta la capa de persistencia y portal de presentación.
+        </p>
+
+        <!-- Especificaciones -->
+        <div class="mb-4">
+            <h5 class="fw-bold text-white mb-3" style="font-size: 0.95rem;"><i class="bi bi-info-circle text-info me-2"></i>Especificaciones de Hardware y Tecnologías (Arquitectura IoT)</h5>
+            
+            <div class="glass-card p-3 mb-3 border-opacity-25" style="background: rgba(0,0,0,0.15);">
+                <h6 class="fw-bold text-white small mb-2">1. Capa de Dispositivos (Sensores Físicos)</h6>
+                <p class="text-white text-opacity-70 small mb-2">Esta capa captura la telemetría cruda del entorno del camión en terreno.</p>
+                <ul class="text-white text-opacity-70 small mb-0 ps-3">
+                    <li class="mb-1"><strong class="text-white text-opacity-100">Sensor GPS (RF-10):</strong> Para cumplir con el registro de ubicación, rutas y tiempos de recorrido, simularemos el uso de módulos telemáticos industriales como el Queclink GV300 o el Teltonika FMB120. Estos dispositivos ofrecen alta precisión satelital y cuentan con interfaces listas para conectarse a la computadora central del vehículo.</li>
+                    <li><strong class="text-white text-opacity-100">Sensor de Temperatura (RF-13):</strong> Para el monitoreo de las condiciones de carga y la emisión de alertas al superar límites críticos, se proponen sensores digitales Dallas DS18B20 (cableados, de alta precisión y durabilidad) o balizas inalámbricas industriales como el RuuviTag Pro, ideales para el interior de cajas frigoríficas.</li>
+                </ul>
+            </div>
+
+            <div class="glass-card p-3 mb-3 border-opacity-25" style="background: rgba(0,0,0,0.15);">
+                <h6 class="fw-bold text-white small mb-2">2. Capa de Procesamiento Local (Edge Computing - CPU a bordo)</h6>
+                <p class="text-white text-opacity-70 small mb-2">En lugar de que cada sensor transmita por su cuenta, instalaremos un "cerebro" central en la cabina de cada camión.</p>
+                <ul class="text-white text-opacity-70 small mb-0 ps-3">
+                    <li class="mb-1"><strong class="text-white text-opacity-100">Hardware IoT Gateway:</strong> Se propone el uso de una Raspberry Pi Compute Module 4 (versión Industrial) o un gateway vehicular como el Teltonika RUT955 (que integra CPU de procesamiento avanzado y router móvil).</li>
+                    <li><strong class="text-white text-opacity-100">Función:</strong> Este hardware actuará como concentrador. Recibirá los datos en tiempo real del GPS y los sensores de temperatura, los empaquetará en un formato ligero (como JSON) y gestionará lógicas locales, como encender una luz de advertencia en el tablero del conductor si la temperatura sube repentinamente, operando de manera independiente a la nube.</li>
+                </ul>
+            </div>
+
+            <div class="glass-card p-3 mb-3 border-opacity-25" style="background: rgba(0,0,0,0.15);">
+                <h6 class="fw-bold text-white small mb-2">3. Capa de Conectividad y Protocolos</h6>
+                <ul class="text-white text-opacity-70 small mb-0 ps-3">
+                    <li class="mb-1"><strong class="text-white text-opacity-100">Red de Transmisión:</strong> Conectividad 4G LTE mediante un chip M2M (Machine to Machine) multicarrier, asegurando cobertura a lo largo de las distintas regiones del país.</li>
+                    <li><strong class="text-white text-opacity-100">Protocolo de Comunicación:</strong> Utilizaremos el estándar MQTT (Message Queuing Telemetry Transport). Es un protocolo ultraligero perfecto para IoT, ya que permite enviar paquetes de datos pequeños de forma continua y segura, consumiendo un mínimo de ancho de banda.</li>
+                </ul>
+            </div>
+
+            <div class="glass-card p-3 mb-4 border-opacity-25" style="background: rgba(0,0,0,0.15);">
+                <h6 class="fw-bold text-white small mb-2">4. Capa de Procesamiento, Persistencia y Presentación</h6>
+                <ul class="text-white text-opacity-70 small mb-0 ps-3">
+                    <li class="mb-1"><strong class="text-white text-opacity-100">Base de Datos (RF-11):</strong> Tal como requiere la arquitectura de Hirata, la persistencia se realiza en un motor relacional MySQL ya implementado, lo que asegura una estructura robusta para realizar inserciones continuas y consultas históricas.</li>
+                    <li><strong class="text-white text-opacity-100">Visualización y Reportes (RF-12):</strong> El personal accederá a un Dashboard web moderno construido con el framework GlassKit (HTML/CSS/JS), desde donde podrán monitorear la flota y exportar la analítica de rendimiento.</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-center">
+            <img src="https://raw.githubusercontent.com/Bksp/HirataTelemetria/main/src/demos/img/DiagramaAltoNivel.png" alt="Diagrama de Arquitectura de Alto Nivel" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+        </div>
+    </div>
+</section>
+
+<!-- Activities Diagram Card -->
+<section id="uml-actividades" class="content-section mt-4">
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-gear-fill text-warning me-2"></i>3. Diagrama de Actividades</h4>
+            <span class="badge badge-glass bg-warning bg-opacity-25 text-warning border-warning border-opacity-50">Flujo de Operaciones</span>
+        </div>
+        <p class="text-white text-opacity-70 small mb-4">
+            Flujo de eventos y acciones del sistema, desde la lectura de los sensores hasta el procesamiento y la generación de reportes.
+        </p>
+
+        <div class="row g-4 justify-content-center">
+            <div class="col-md-6 d-flex justify-content-center">
+                <img src="https://raw.githubusercontent.com/Bksp/HirataTelemetria/main/src/demos/img/DiagramaActividades1.png" alt="Diagrama de Actividades 1" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+            </div>
+            <div class="col-md-6 d-flex justify-content-center">
+                <img src="https://raw.githubusercontent.com/Bksp/HirataTelemetria/main/src/demos/img/DiagramaActividades2.png" alt="Diagrama de Actividades 2" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Sequence Diagram Card -->
+<section id="uml-secuencia" class="content-section mt-4">
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-arrow-left-right text-success me-2"></i>4. Diagrama de Secuencia</h4>
+            <span class="badge badge-glass bg-success bg-opacity-25 text-success border-success border-opacity-50">Interacción</span>
+        </div>
+        <p class="text-white text-opacity-70 small mb-4">
+            Secuencia de interacciones entre los componentes del sistema, sensores y base de datos a lo largo del tiempo.
+        </p>
+
+        <div class="d-flex justify-content-center">
+            <img src="https://raw.githubusercontent.com/Bksp/HirataTelemetria/main/src/demos/img/DiagramaSecuencia.png" alt="Diagrama de Secuencia" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+        </div>
+    </div>
+</section>
+
+<!-- Use Cases Diagram Card -->
+<section id="uml-casos" class="content-section mt-4">
+    <div class="glass-card p-4">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="h5 fw-bold text-white m-0"><i class="bi bi-people-fill text-danger me-2"></i>5. Diagrama de Casos de Uso</h4>
+            <span class="badge badge-glass bg-danger bg-opacity-25 text-danger border-danger border-opacity-50">Actores y Funciones</span>
+        </div>
+        <p class="text-white text-opacity-70 small mb-4">
+            Interacción entre los usuarios (Administrador y Operador) y las funcionalidades clave del sistema.
+        </p>
+
+        <!-- Use Case Image -->
+        <div class="d-flex justify-content-center mb-4">
+            <img src="https://raw.githubusercontent.com/Bksp/HirataTelemetria/main/src/demos/img/CasosDeUso.png" alt="Diagrama de Casos de Uso" class="img-fluid rounded-3 shadow-lg" style="max-height: 600px; object-fit: contain;">
+        </div>
+    </div>
+</section>`;async function t(e){e.innerHTML=a}export{t as init};
